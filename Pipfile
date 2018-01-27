@@ -8,6 +8,11 @@ name = "pypi"
 [packages]
 
 flask = "*"
+pony = "*"
+"psycopg2" = "*"
+flask-login = "*"
+pytest = "*"
+passlib = "*"
 
 
 [dev-packages]
