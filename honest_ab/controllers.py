@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
-from flask_login import login_user, current_user
+from flask_login import login_user, logout_user, current_user
 
 from honest_ab.models import User, AuthenticationError
 
@@ -20,7 +20,10 @@ def register_controllers(app):
 # Users controller
 users_controller = create_controller('users')
 
-# TODO logout
+@users_controller.route('/perform_logout')
+def perform_logout():
+    logout_user()
+    return "Logged out" # TODO
 
 @users_controller.route('/perform_login', methods=['POST'])
 def perform_login():
@@ -31,7 +34,7 @@ def perform_login():
         )
         login_user(user)
 
-        return "Logged in"
+        return "Logged in" # TODO
     except AuthenticationError as error:
         flash(str(error), category='danger')
         return redirect(url_for('users.login_form'))

@@ -25,6 +25,21 @@ class TestIds(object):
 # Perhaps by subscribing to the login signal, mocking the module,
 # or reading the session in the app context
 
+class TestLoggedOut(object):
+
+    @wrap_db
+    def test_logging_out_works_with_user(self, client):
+        user = User.create(
+            username = 'John',
+            password_1 = '9898dhfaksh723SS@',
+            password_2 = '9898dhfaksh723SS@'
+        )
+        flush()
+
+        response = client.get('/users/perform_logout', follow_redirects=True)
+
+        assert(b"Logged out" in response.data)
+
 class TestLogginIn(object):
 
     def make_user(self, username='my_organization', password='somepass'):
