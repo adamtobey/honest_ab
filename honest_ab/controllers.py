@@ -20,6 +20,10 @@ def register_controllers(app):
 # Users controller
 users_controller = create_controller('users')
 
+@users_controller.route('/new')
+def new_user():
+    return render_template("join.html.j2")
+
 @users_controller.route('/create', methods=['POST'])
 def create_user():
     try:

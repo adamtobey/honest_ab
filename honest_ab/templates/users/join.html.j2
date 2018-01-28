@@ -1,0 +1,18 @@
+{% extends "common/base.html.j2" %}
+
+{% block content %}
+  <h3>Create a new account</h3>
+  <form action="/users/create" method="post">
+    <div class="form-group">
+      <label for="create-user_username">Username</label>
+      <input id="create-user_username" class="form-control" name="name" placeholder="Username" />
+
+      <label for="create-user_password_1">Password</label>
+      <input type="password" id="create-user_password_1" class="form-control" name="password_1" placeholder="Password" />
+
+      <label for="create-user_password_2">Same password again</label>
+      <input type="password" id="create-user_password_2" class="form-control" name="password_2" placeholder="Same password again" />
+    </div>
+    <button type="submit" class="btn btn-primary">Join</button>
+  </form>
+{% endblock %}
