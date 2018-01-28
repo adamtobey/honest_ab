@@ -37,6 +37,21 @@
         {% endfor %}
       </ul>
       <div class="main-container">
+        <div class="flash-container">
+          {% for cat in ["danger", "success", "primary"] %}
+            {% with messages = get_flashed_messages(category_filter=[cat]) %}
+              {% if messages %}
+                <div class="flashes-container">
+                  {% for message in messages %}
+                  <div class="alert alert-{{ cat }}" role="alert">
+                    {{ message }}
+                  </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+          {% endfor %}
+        </div>
         {% block content %}
         {% endblock %}
       </div>

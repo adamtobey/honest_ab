@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, abort, request
+from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
 from flask_login import login_user, current_user
 
 from honest_ab.models import User, AuthenticationError
@@ -36,4 +36,5 @@ def create_user():
 
         return "Your account was created" #TODO
     except (AuthenticationError, ValueError) as error:
-        return str(error) #TODO
+        flash(str(error), category='danger')
+        return redirect(url_for('users.new_user'))
