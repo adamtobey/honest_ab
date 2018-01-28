@@ -1,0 +1,18 @@
+{% extends "common/base.html.j2" %}
+
+{% block content %}
+  <div class="form-container">
+    <h3>Log in</h3>
+    <a href="/users/new">Don't have an account? Join</a>
+    <form action="/users/perform_login" method="post">
+      <div class="form-group">
+        <label for="login-user_username">Username</label>
+        <input id="login-user_username" class="form-control" name="name" placeholder="Username" />
+
+        <label for="login-user_password">Password</label>
+        <input type="password" id="login-user_password_1" class="form-control" name="password" placeholder="Password" />
+      </div>
+      <button type="submit" class="btn btn-primary">Log in</button>
+    </form>
+  </div>
+{% endblock %}
