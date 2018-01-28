@@ -20,6 +20,8 @@ def register_controllers(app):
 # Users controller
 users_controller = create_controller('users')
 
+# TODO logout
+
 @users_controller.route('/perform_login', methods=['POST'])
 def perform_login():
     try:

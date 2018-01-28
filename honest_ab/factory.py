@@ -6,6 +6,7 @@ import honest_ab.models
 
 from honest_ab.controllers import register_controllers
 from honest_ab.database import db
+from honest_ab.template_helpers import register_helpers
 
 def create_app(config=None, test_db=False):
     app = Flask("honest_ab")
@@ -34,6 +35,9 @@ def create_app(config=None, test_db=False):
         database=app.config['DB_NAME']
     )
     db.generate_mapping(create_tables=True)
+
+    # Introduce custom template helpers
+    register_helpers(app)
 
     # Initialize login manager
     app.secret_key = app.config['LOGIN_MANAGER_SECRET_KEY']

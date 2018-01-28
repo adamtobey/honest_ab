@@ -1,0 +1,14 @@
+{% if is_user(current_user) %}
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
+      {{ current_user.name }}
+    </a>
+    <div class="dropdown-menu">
+      <a class="dropdown-item" href="/users/logout">Log Out</a>
+    </div>
+  </li>
+{% else %}
+  <li class="nav-item">
+    <a class="nav-link" href="users/login">Log In</a>
+  </li>
+{% endif %}

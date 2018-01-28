@@ -27,14 +27,8 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="#">On the right</a>
+          {% include "common/nav_account_info.html.j2" %}
         </li>
-
-        {% for route, (name, _) in [] %}
-          <li class="nav-item">
-            <a class="nav-link" href="{{ route }}">{{ name|escape }}</a>
-          </li>
-        {% endfor %}
       </ul>
       <div class="main-container">
         <div class="flash-container">
