@@ -8,12 +8,30 @@ class AuthenticationError(RuntimeError):
 
 class User(db.Entity, UserMixin):
 
-    name = Required(str)
+    name = Required(str, unique=True)
     pass_hash = Required(str)
 
     # TODO mixin if useful
     def find_by_id(id):
         return get(u for u in User if u.id == id)
+
+    @staticmethod
+    @db_session
+    def for_login(username, password):
+        if (type(username) != str) or len(username) < 1:
+            raise AuthenticationError("Invalid username")
+        if (type(password) != str) or len(password) < 1:
+            raise AuthenticationError("Invalid password")
+
+        user = get(u for u in User if u.name == username)
+
+        if user == None:
+            raise AuthenticationError("Invalid username")
+
+        if password_context.verify(password, user.pass_hash):
+            return user
+        else:
+            raise AuthenticationError("Password is incorrect")
 
     @staticmethod
     @db_session

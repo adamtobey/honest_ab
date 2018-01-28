@@ -6,6 +6,8 @@ class SanityPreservationException(RuntimeError):
 
 __db_session = db_session
 
+# TODO creating models in fixtures breaks isolation :(
+# Actually I forgot to use wrap_db... Test this later
 def wrap_db(function):
     @wraps(function)
     @__db_session

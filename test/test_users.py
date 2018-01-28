@@ -1,7 +1,91 @@
+import pytest
+
 from test.fixtures import app, client
 from test.helpers import *
 
 from honest_ab.models import User
+
+# TODO test whether users are actually logged in with flask-login
+# Perhaps by subscribing to the login signal, mocking the module,
+# or reading the session in the app context
+
+class TestLogginIn(object):
+
+    def make_user(self, username='my_organization', password='somepass'):
+        user = User.create(
+            username = username,
+            password_1 = password,
+            password_2 = password,
+        )
+        flush()
+        return user
+
+    @wrap_db
+    def test_fails_with_wrong_password(self, client):
+        user = self.make_user()
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = 'my_organization',
+            password = 'password'
+        ))
+
+        assert(b"Password is incorrect" in response.data)
+
+    @wrap_db
+    def test_fails_with_nonexistent_username(self, client):
+        user = self.make_user()
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = 'nonexistent',
+            password = 'password'
+        ))
+
+        assert(b"Invalid username" in response.data)
+
+    @wrap_db
+    def test_fails_with_blank_password(self, client):
+        user = self.make_user()
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = 'my_organization',
+            password = ''
+        ))
+
+        assert(b"Invalid password" in response.data)
+
+    @wrap_db
+    def test_fails_with_blank_form(self, client):
+        user = self.make_user()
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = '',
+            password = ''
+        ))
+
+        assert(b"Invalid username" in response.data)
+
+    @wrap_db
+    def test_fails_with_right_pass_wrong_user(self, client):
+        user1 = self.make_user()
+        user2 = self.make_user('Bob', 'securepass123')
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = 'my_organization',
+            password = 'securepass123'
+        ))
+
+        assert(b"Password is incorrect" in response.data)
+
+    @wrap_db
+    def test_succeeds_with_username_password(self, client):
+        user = self.make_user()
+
+        response = client.post('/users/perform_login', follow_redirects=True, data=dict(
+            username = 'my_organization',
+            password = 'somepass'
+        ))
+
+        assert(b"Logged in" in response.data)
 
 class TestCreatingUsers(object):
 

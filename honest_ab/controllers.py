@@ -20,8 +20,22 @@ def register_controllers(app):
 # Users controller
 users_controller = create_controller('users')
 
+@users_controller.route('/perform_login', methods=['POST'])
+def perform_login():
+    try:
+        user = User.for_login(
+            username=request.form['username'],
+            password=request.form['password']
+        )
+        login_user(user)
+
+        return "Logged in"
+    except AuthenticationError as error:
+        flash(str(error), category='danger')
+        return redirect(url_for('users.login_form'))
+
 @users_controller.route('/login')
-def login_user():
+def login_form():
     return render_template("login.html.j2")
 
 @users_controller.route('/new')
