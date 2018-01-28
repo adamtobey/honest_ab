@@ -5,6 +5,22 @@ from test.helpers import *
 
 from honest_ab.models import User
 
+class TestIds(object):
+
+    @wrap_db
+    def test_can_find_user_by_id_for_login_manager(self, client):
+        user = User.create(
+            username = 'Joe',
+            password_1 = 'mittens1982',
+            password_2 = 'mittens1982'
+        )
+        flush()
+
+        assert int(user.get_id()) == user.get_pk()
+
+        lookup = User.find_by_id(user.get_id())
+        assert lookup == user
+
 # TODO test whether users are actually logged in with flask-login
 # Perhaps by subscribing to the login signal, mocking the module,
 # or reading the session in the app context

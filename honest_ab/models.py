@@ -12,8 +12,15 @@ class User(db.Entity, UserMixin):
     pass_hash = Required(str)
 
     # TODO mixin if useful
+    @db_session
     def find_by_id(id):
         return get(u for u in User if u.id == id)
+
+    # Required for flask_login. This will be the ID stored in the
+    # Session and will be used later to look up the user by according
+    # to the function registered with the LoginManager.
+    def get_id(self):
+        return str(self.get_pk())
 
     @staticmethod
     @db_session

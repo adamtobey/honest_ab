@@ -4,6 +4,8 @@ from flask_login import LoginManager
 # Ensure the models are registered before the db mapping is generated
 import honest_ab.models
 
+from honest_ab.models import User
+
 from honest_ab.controllers import register_controllers
 from honest_ab.database import db
 from honest_ab.template_helpers import register_helpers
@@ -41,6 +43,8 @@ def create_app(config=None, test_db=False):
 
     # Initialize login manager
     app.secret_key = app.config['LOGIN_MANAGER_SECRET_KEY']
-    LoginManager().init_app(app)
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.user_loader(User.find_by_id)
 
     return app
