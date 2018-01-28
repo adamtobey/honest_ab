@@ -15,7 +15,7 @@ class TestCreatingUsers(object):
 
         flush()
 
-        response = client.post('/users/create', data=dict(
+        response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
             password_1 = "mypass",
             password_2 = "mypass"
@@ -29,7 +29,7 @@ class TestCreatingUsers(object):
 
     @wrap_db
     def test_succeeds_with_valid_user(self, client):
-        response = client.post('/users/create', data=dict(
+        response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
             password_1 = "mypass",
             password_2 = "mypass"
@@ -43,7 +43,7 @@ class TestCreatingUsers(object):
 
     @wrap_db
     def test_fails_with_non_matching_passwords(self, client):
-        response = client.post('/users/create', data=dict(
+        response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
             password_1 = "mypass",
             password_2 = "lakdjf"
@@ -57,7 +57,7 @@ class TestCreatingUsers(object):
 
     @wrap_db
     def test_fails_with_blank_username(self, client):
-        response = client.post('/users/create', data=dict(
+        response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "",
             password_1 = "mypass",
             password_2 = "mypass"
@@ -71,7 +71,7 @@ class TestCreatingUsers(object):
 
     @wrap_db
     def test_fails_with_short_password(self, client):
-        response = client.post('/users/create', data=dict(
+        response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
             password_1 = "abc",
             password_2 = "abc"
