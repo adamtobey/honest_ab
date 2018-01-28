@@ -8,13 +8,13 @@ __db_session = db_session
 
 def wrap_db(function):
     @wraps(function)
+    @__db_session
     def isolate(*a, **b):
         function(*a, **b)
         rollback()
-    return __db_session(isolate)
+    return isolate
 
-# To preserve test isolation, override the ability to commit
-# transactions in tests
+# To preserve test isolation, override the ability to commit transactions in tests
 def commit():
     raise SanityPreservationException("Use flush() instead of commit().")
 

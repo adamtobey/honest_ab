@@ -11,6 +11,7 @@ class User(db.Entity, UserMixin):
     name = Required(str)
     pass_hash = Required(str)
 
+    # TODO mixin if useful
     def find_by_id(id):
         return get(u for u in User if u.id == id)
 
@@ -29,6 +30,6 @@ class User(db.Entity, UserMixin):
         pass_hash = password_context.hash(password_1)
         user = User(name=username, pass_hash=pass_hash)
 
-        flush()
+        flush() #?
 
         return user

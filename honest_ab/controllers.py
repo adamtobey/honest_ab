@@ -24,12 +24,12 @@ users_controller = create_controller('users')
 def create_user():
     try:
         user = User.create(
-            username = request.form['name'],
-            password_1 = request.form['password_1'],
-            password_2 = request.form['password_2']
+            username=request.form['name'],
+            password_1=request.form['password_1'],
+            password_2=request.form['password_2']
         )
         login_user(user)
 
-        return "Your account was created"
+        return "Your account was created" #TODO
     except (AuthenticationError, ValueError) as error:
-        return str(error)
+        return str(error) #TODO
