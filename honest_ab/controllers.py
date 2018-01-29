@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, abort, request, redirect, url_for,
 from honest_ab.login import login_user, logout_user, current_user, login_required
 
 from honest_ab.models import User, AuthenticationError, Experiment
+from honest_ab.database import CacheIndexError
 
 # Routing helpers
 
@@ -20,26 +21,34 @@ def register_controllers(app):
 # Experiments controller
 experiments_controller = create_controller('experiments')
 
-@experiments_controller.route('/create')
+@experiments_controller.route('/create', methods=['POST'])
 @login_required
 def create_experiment():
-    Experiment(
-        name=request.form['name'],
-        description=request.form['description'],
-        user=current_user()
-    )
-    return "Experiment created"
+    try:
+        Experiment(
+            name=request.form['name'],
+            description=request.form['description'],
+            user=current_user()
+        )
+        return "Experiment created"
+    except ValueError as error:
+        if "Experiment.name" in str(error):
+            flash("Experiment must have a name", category="danger")
+            return redirect(url_for('experiments.new_experiment'))
+        else:
+            raise error
+    except CacheIndexError as error:
+        flash("Experiment names must be unique", category="danger")
+        return redirect(url_for('experiments.new_experiment'))
+
+@experiments_controller.route('/new')
+@login_required
+def new_experiment():
+    # TODO
+    return "Fail"
 
 # Users controller
 users_controller = create_controller('users')
-
-# TODO test
-@users_controller.route('/identify')
-def identify():
-    if isinstance(current_user(), User):
-        return f"{current_user().name} is logged in"
-    else:
-        return "Logged out"
 
 @users_controller.route('/perform_logout')
 def perform_logout():

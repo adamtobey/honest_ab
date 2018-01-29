@@ -1,5 +1,6 @@
 import pytest
 from flask import _request_ctx_stack, has_request_context
+from flask_login import AnonymousUserMixin
 from honest_ab.factory import create_app
 from honest_ab.database import db, flush
 
@@ -8,7 +9,8 @@ from honest_ab.models import User
 class MockLogin(object):
 
     def __init__(self):
-        self._logged_in_user = None
+        self.anonymous_user = AnonymousUserMixin()
+        self._logged_in_user = self.anonymous_user
 
     def sync_request_context(self):
         if has_request_context():
@@ -26,7 +28,7 @@ class MockLogin(object):
         self.sync_request_context()
 
     def logout(self):
-        self._logged_in_user = None
+        self._logged_in_user = self.anonymous_user
         self.sync_request_context()
 
 auth_instance = MockLogin()

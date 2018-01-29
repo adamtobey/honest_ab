@@ -4,7 +4,11 @@
   <div class="form-container">
     <h3>Log in</h3>
     <a href="/users/new">Don't have an account? Join</a>
-    <form action="/users/perform_login" method="post">
+    {# Authentication test predicate looks for this form to ensure it's hitting
+    the login page. If there is a need for an inline login form on every page,
+    DO NOT use a form with id="full-login-form", or else that test will silently
+    break, passing on every page that has this form. #}
+    <form id="full-login-form" action="/users/perform_login" method="post">
       <div class="form-group">
         <label for="login-user_username">Username</label>
         <input id="login-user_username" class="form-control" name="name" placeholder="Username" />

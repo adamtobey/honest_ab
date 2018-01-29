@@ -1,7 +1,7 @@
-{% if is_user(current_user()) %}
+{% if is_user(current_user) %}
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
-      {{ current_user().name }}
+      {{ current_user.name }}
     </a>
     <div class="dropdown-menu">
       <a class="dropdown-item" href="/users/perform_logout">Log Out</a>

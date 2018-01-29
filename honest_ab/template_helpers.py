@@ -1,5 +1,5 @@
 from honest_ab.models import User
-from honest_ab.login import current_user
+from werkzeug.local import LocalProxy
 
 def register_helpers(app):
 
@@ -10,10 +10,11 @@ def register_helpers(app):
         # define here
 
         def is_user(obj):
+            if isinstance(obj, LocalProxy):
+                obj = obj._get_current_object()
             return isinstance(obj, User)
 
         # register and name here
         return dict(
-            is_user = is_user,
-            current_user = current_user
+            is_user = is_user
         )
