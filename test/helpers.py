@@ -4,6 +4,8 @@ from functools import wraps
 class SanityPreservationException(RuntimeError):
     pass
 
+# TODO make a class decorator to wrap db
+
 __db_session = db_session
 
 # TODO creating models in fixtures breaks isolation :(

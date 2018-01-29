@@ -1,8 +1,8 @@
 import os
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 
-from honest_ab.models import User, AuthenticationError
+from honest_ab.models import User, AuthenticationError, Experiment
 
 # Routing helpers
 
@@ -17,8 +17,29 @@ def register_controllers(app):
         app.register_blueprint(blueprint, url_prefix=f"/{prefix}")
 
 
+# Experiments controller
+experiments_controller = create_controller('experiments')
+
+@experiments_controller.route('/create')
+@login_required
+def create_experiment():
+    Experiment(
+        name=request.form['name'],
+        description=request.form['description'],
+        user=current_user
+    )
+    return "Experiment created"
+
 # Users controller
 users_controller = create_controller('users')
+
+# TODO test
+@users_controller.route('/identify')
+def identify():
+    if isinstance(current_user, User):
+        return f"{current_user.name} is logged in"
+    else:
+        return "Logged out"
 
 @users_controller.route('/perform_logout')
 def perform_logout():

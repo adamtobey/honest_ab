@@ -1,17 +1,25 @@
+import uuid
 from flask_login.mixins import UserMixin
 
 from honest_ab.database import *
 from honest_ab.crypto import password_context
+
+# TODO create, update timestamps?
+
+# Users
 
 class AuthenticationError(RuntimeError):
     pass
 
 class User(db.Entity, UserMixin):
 
+    # TODO string length validation
     name = Required(str, unique=True)
     pass_hash = Required(str)
 
-    # TODO mixin if useful
+    experiments = Set('Experiment')
+
+    # TODO this already exists: User[pkey]
     @db_session
     def find_by_id(id):
         return get(u for u in User if u.id == id)
@@ -58,3 +66,21 @@ class User(db.Entity, UserMixin):
         flush() #?
 
         return user
+
+# Experiments
+
+class Experiment(db.Entity):
+
+    # Primary key & UUID used for associating observations with
+    # experiments in data storage
+    uuid = PrimaryKey(uuid.UUID, default=uuid.uuid4)
+
+    # TODO string length validation
+    name = Required(str)
+    user = Required(User, index=True)
+
+    # Names must be unique for each user
+    composite_key(name, user)
+
+    # TODO length
+    description = Optional(str)
