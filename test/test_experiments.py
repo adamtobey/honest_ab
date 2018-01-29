@@ -2,13 +2,11 @@ import pytest
 
 from test.fixtures import app, client, make_user, auth
 from test.predicates import requires_authentication
-from test.helpers import *
 
 from honest_ab.models import User, Experiment
 
 class TestCreatingExperiments(object):
 
-    @wrap_db
     def test_requires_authentication(self, client):
         response = client.post('experiments/create', follow_redirects=False, data=dict(
             name='name',
@@ -16,7 +14,6 @@ class TestCreatingExperiments(object):
         ))
         assert(requires_authentication(response))
 
-    @wrap_db
     def test_fails_without_name(self, client, auth):
         user = make_user()
         auth.login(user)
@@ -28,7 +25,6 @@ class TestCreatingExperiments(object):
 
         assert(b"Fail" in response.data)
 
-    @wrap_db
     def test_succeeds_without_description(self, client, auth):
         user = make_user()
         auth.login(user)
@@ -40,7 +36,6 @@ class TestCreatingExperiments(object):
 
         assert(b"Experiment created" in response.data)
 
-    @wrap_db
     def test_succeeds_with_description(self, client, auth):
         user = make_user()
         auth.login(user)
@@ -52,7 +47,6 @@ class TestCreatingExperiments(object):
 
         assert(b"Experiment created" in response.data)
 
-    @wrap_db
     def test_fails_with_duplicate_name(self, client, auth):
         user = make_user()
         auth.login(user)
@@ -71,7 +65,6 @@ class TestCreatingExperiments(object):
 
         assert(b"Fail" in response.data)
 
-    @wrap_db
     def test_succeeds_with_duplicate_name_but_different_user(self, client, auth):
         user1 = make_user()
         user2 = make_user('bob')

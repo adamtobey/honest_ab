@@ -1,13 +1,12 @@
 import pytest
 
 from test.fixtures import app, client
-from test.helpers import *
 
 from honest_ab.models import User
+from honest_ab.database import *
 
 class TestIds(object):
 
-    @wrap_db
     def test_can_find_user_by_id_for_login_manager(self, client):
         user = User.create(
             username = 'Joe',
@@ -27,7 +26,6 @@ class TestIds(object):
 
 class TestLoggedOut(object):
 
-    @wrap_db
     def test_logging_out_works_with_user(self, client):
         user = User.create(
             username = 'John',
@@ -51,7 +49,6 @@ class TestLogginIn(object):
         flush()
         return user
 
-    @wrap_db
     def test_fails_with_wrong_password(self, client):
         user = self.make_user()
 
@@ -62,7 +59,6 @@ class TestLogginIn(object):
 
         assert(b"Password is incorrect" in response.data)
 
-    @wrap_db
     def test_fails_with_nonexistent_username(self, client):
         user = self.make_user()
 
@@ -73,7 +69,6 @@ class TestLogginIn(object):
 
         assert(b"Invalid username" in response.data)
 
-    @wrap_db
     def test_fails_with_blank_password(self, client):
         user = self.make_user()
 
@@ -84,7 +79,6 @@ class TestLogginIn(object):
 
         assert(b"Invalid password" in response.data)
 
-    @wrap_db
     def test_fails_with_blank_form(self, client):
         user = self.make_user()
 
@@ -95,7 +89,6 @@ class TestLogginIn(object):
 
         assert(b"Invalid username" in response.data)
 
-    @wrap_db
     def test_fails_with_right_pass_wrong_user(self, client):
         user1 = self.make_user()
         user2 = self.make_user('Bob', 'securepass123')
@@ -107,7 +100,6 @@ class TestLogginIn(object):
 
         assert(b"Password is incorrect" in response.data)
 
-    @wrap_db
     def test_succeeds_with_username_password(self, client):
         user = self.make_user()
 
@@ -120,7 +112,6 @@ class TestLogginIn(object):
 
 class TestCreatingUsers(object):
 
-    @wrap_db
     def test_fails_with_duplicate_user(self, client):
         user = User.create(
             username = 'my_organization',
@@ -142,7 +133,6 @@ class TestCreatingUsers(object):
 
         assert(users == 1)
 
-    @wrap_db
     def test_succeeds_with_valid_user(self, client):
         response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
@@ -156,7 +146,6 @@ class TestCreatingUsers(object):
 
         assert(user != None)
 
-    @wrap_db
     def test_fails_with_non_matching_passwords(self, client):
         response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
@@ -170,7 +159,6 @@ class TestCreatingUsers(object):
 
         assert(user == None)
 
-    @wrap_db
     def test_fails_with_blank_username(self, client):
         response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "",
@@ -184,7 +172,6 @@ class TestCreatingUsers(object):
 
         assert(user == None)
 
-    @wrap_db
     def test_fails_with_short_password(self, client):
         response = client.post('/users/create', follow_redirects=True, data=dict(
             name = "my_organization",
