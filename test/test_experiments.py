@@ -1,7 +1,6 @@
 import pytest
-from flask_login import login_user
 
-from test.fixtures import app, client, make_user
+from test.fixtures import app, client, make_user, auth
 from test.helpers import *
 
 from honest_ab.models import User, Experiment
@@ -9,23 +8,18 @@ from honest_ab.models import User, Experiment
 class TestCreatingExperiments(object):
 
     @wrap_db
-    def test_logging_in(self, client):
+    def test_logging_in(self, client, auth):
         user = make_user()
 
-        lr = client.post('/users/perform_login', follow_redirects=True, data=dict(
-            username = 'test',
-            password = 'password'
-        ))
-
-        assert(b"Logged in" in lr.data)
+        auth.login(user)
 
         response = client.get('/users/identify')
-
         assert(b"test is logged in" in response.data)
 
-        client.get('users/logout')
+        auth.logout()
 
-        assert(b"test is logged out")
+        response = client.get('/users/identify')
+        assert(b"Logged out" in response.data)
 
     @wrap_db
     def test_requires_authentication(self, client):

@@ -7,10 +7,10 @@ name = "pypi"
 
 [packages]
 
-flask = "*"
+Flask = "*"
 pony = "*"
 "psycopg2" = "*"
-flask-login = "*"
+Flask-Login = "*"
 pytest = "*"
 passlib = "*"
 

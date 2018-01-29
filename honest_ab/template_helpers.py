@@ -1,4 +1,5 @@
 from honest_ab.models import User
+from honest_ab.login import current_user
 
 def register_helpers(app):
 
@@ -13,5 +14,6 @@ def register_helpers(app):
 
         # register and name here
         return dict(
-            is_user = is_user
+            is_user = is_user,
+            current_user = current_user
         )
