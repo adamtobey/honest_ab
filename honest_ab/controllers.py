@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, abort, request, redirect, url_for,
 from honest_ab.login import login_user, logout_user, current_user, login_required
 
 from honest_ab.models import User, AuthenticationError, Experiment
-from honest_ab.database import CacheIndexError
+from honest_ab.database import CacheIndexError, db_session
 
 # Routing helpers
 
@@ -23,6 +23,7 @@ experiments_controller = create_controller('experiments')
 
 @experiments_controller.route('/create', methods=['POST'])
 @login_required
+@db_session
 def create_experiment():
     try:
         Experiment(
@@ -44,8 +45,7 @@ def create_experiment():
 @experiments_controller.route('/new')
 @login_required
 def new_experiment():
-    # TODO
-    return "Fail"
+    return render_template("new.html.j2")
 
 # Users controller
 users_controller = create_controller('users')

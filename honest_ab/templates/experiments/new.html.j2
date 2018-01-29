@@ -1,0 +1,17 @@
+{% extends 'common/base.html.j2' %}
+
+{% block content %}
+  <div class="form-container">
+    <h3>Create a new experiment</h3>
+    <form action="/experiments/create" method="post">
+      <div class="form-group">
+        <label for="create-experiment_name">Experiment Name</label>
+        <input id="create-experiment_name" class="form-control" name="name" placeholder="Name" />
+
+        <label for="create-experiment_description">Description (Optional)</label>
+        <textarea id="create-experiment_description" class="form-control" name="description"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+  </div>
+{% endblock %}
