@@ -1,15 +1,23 @@
 {% extends 'common/base.html.j2' %}
 
+{% block head %}
+  <script src="{{ url_for('static', filename='experiment-schema_builder.js') }}" /></script>
+{% endblock %}
+
 {% block content %}
   <div class="form-container">
-    <h3>Create a new experiment</h3>
     <form action="/experiments/create" method="post">
       <div class="form-group">
+        <h4>Experiment Details</h4>
         <label for="create-experiment_name">Experiment Name</label>
         <input id="create-experiment_name" class="form-control" name="name" placeholder="Name" />
 
         <label for="create-experiment_description">Description (Optional)</label>
         <textarea id="create-experiment_description" class="form-control" name="description"></textarea>
+      </div>
+      <h4>Data schema</h4>
+      <div class="form-group" id="create-experiment_schema-container">
+        <div class="btn btn-primary js-add_schema_field">Add Field</div>
       </div>
       <button type="submit" class="btn btn-primary">Create</button>
     </form>

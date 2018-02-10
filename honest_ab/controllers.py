@@ -1,6 +1,8 @@
 import os
+import re
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
 from honest_ab.login import login_user, logout_user, current_user, login_required
+from .distributed_regression import store_experiment_schema, validate_schema
 
 from honest_ab.models import User, AuthenticationError, Experiment
 from honest_ab.database import CacheIndexError, db_session
@@ -26,18 +28,45 @@ experiments_controller = create_controller('experiments')
 @db_session
 def create_experiment():
     try:
-        Experiment(
+        schema_names = dict()
+        schema_types = dict()
+        for form_key, value in request.form.items():
+            m = re.match("^schema_field_(\d+)_(name|type)", form_key)
+            if m:
+                schema_id, field_type = m.group(1, 2)
+                if field_type == "name":
+                    schema_names[schema_id] = value
+                else:
+                    schema_types[schema_id] = value
+
+        schema = {
+            schema_names[s_id]: schema_types[s_id]
+            for s_id in schema_names.keys()
+        }
+        if not validate_schema(schema):
+            raise ValueError("Invalid Schema")
+
+        experiment = Experiment(
             name=request.form['name'],
             description=request.form['description'],
             user=current_user()
         )
+
+        store_experiment_schema(experiment.get_pk(), schema)
         return "Experiment created"
     except ValueError as error:
         if "Experiment.name" in str(error):
             flash("Experiment must have a name", category="danger")
             return redirect(url_for('experiments.new_experiment'))
+        elif "Invalid Schema" in str(error):
+            flash("Invalid schema", category="danger") #TODO unhelpful
+            return redirect(url_for('experiments.new_experiment'))
         else:
             raise error
+    # TODO pony.orm.core.TransactionIntegrityError: Object Experiment[UUID('04a65b3c-1ee1-486d-a027-93861e1e386e'
+    # )] cannot be stored in the database. IntegrityError: duplicate key value violates unique constraint "u
+    # nq_experiment__name_user"
+    # DETAIL:  Key (name, "user")=(New Experiment, 3) already exists.
     except CacheIndexError as error:
         flash("Experiment names must be unique", category="danger")
         return redirect(url_for('experiments.new_experiment'))

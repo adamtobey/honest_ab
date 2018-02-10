@@ -4,8 +4,41 @@ from test.fixtures import app, client, make_user, auth
 from test.predicates import requires_authentication
 
 from honest_ab.models import User, Experiment
+from honest_ab.database import select
+from honest_ab.distributed_regression import get_experiment_schema
 
 class TestCreatingExperiments(object):
+
+    # TODO test schema creation
+
+    def schema_to_form_fields(self, schema):
+        form_encoded = {}
+        for i, (name, tt) in enumerate(schema.items()):
+            form_encoded[f"schema_field_{i}_name"] = name
+            form_encoded[f"schema_field_{i}_type"] = tt
+        return form_encoded
+
+    def test_valid_schema(self, client, auth):
+        user = make_user()
+        auth.login(user)
+
+        schema = {
+            'field_1': "numeric",
+            'field_2': "numeric"
+        }
+
+        response = client.post('experiments/create', follow_redirects=True, data=dict(
+            name='name',
+            description='test',
+            **self.schema_to_form_fields(schema)
+        ))
+
+        experiment = select(ex for ex in Experiment if ex.name == 'name').first()
+        eid = experiment.get_pk()
+
+        assert schema == get_experiment_schema(eid)
+
+    # TODO test an invalid schema when schema validation is implemented
 
     def test_requires_authentication(self, client):
         response = client.post('experiments/create', follow_redirects=False, data=dict(
@@ -23,7 +56,7 @@ class TestCreatingExperiments(object):
             description='Something'
         ))
 
-        assert(b"Fail" in response.data)
+        assert(b"must have a name" in response.data)
 
     def test_succeeds_without_description(self, client, auth):
         user = make_user()
@@ -63,7 +96,7 @@ class TestCreatingExperiments(object):
             description='Something else'
         ))
 
-        assert(b"Fail" in response.data)
+        assert(b"names must be unique" in response.data)
 
     def test_succeeds_with_duplicate_name_but_different_user(self, client, auth):
         user1 = make_user()

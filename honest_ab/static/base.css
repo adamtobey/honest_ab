@@ -18,3 +18,16 @@
   flex-grow: 2;
   flex-basis: auto;
 }
+
+
+/* Schema creator */
+.schema-creator-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 10px 0px;
+}
+
+.schema-creator-field {
+  margin: 0px 5px;
+}
