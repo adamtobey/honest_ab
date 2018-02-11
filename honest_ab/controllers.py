@@ -120,3 +120,9 @@ def create_user():
     except (AuthenticationError, ValueError) as error:
         flash(str(error), category='danger')
         return redirect(url_for('users.new_user'))
+
+@users_controller.route('/application_key')
+@login_required
+def user_application_key():
+    app_key = current_user().application_key()
+    return render_template("app_key.html.j2", application_key=app_key)

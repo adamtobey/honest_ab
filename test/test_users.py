@@ -1,9 +1,24 @@
 import pytest
 
-from test.fixtures import app, client
+from test.fixtures import app, client, make_user, auth
+from test.predicates import requires_authentication
 
 from honest_ab.models import User
 from honest_ab.database import *
+
+class TestAppKeys(object):
+
+    def test_requires_authentication(self, client):
+        response = client.get('users/application_key')
+        assert requires_authentication(response)
+
+    def test_shows_app_key(self, client, auth):
+        user = make_user()
+        auth.login(user)
+
+        response = client.get('users/application_key')
+
+        assert bytes(user.application_key(), 'utf-8') in response.data
 
 class TestIds(object):
 

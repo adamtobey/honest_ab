@@ -1,3 +1,4 @@
+from pdb import set_trace
 from flask import Flask
 from honest_ab.login import LoginManager
 
@@ -7,7 +8,7 @@ import honest_ab.models
 from honest_ab.models import User
 
 from honest_ab.controllers import register_controllers
-from honest_ab.database import db
+from honest_ab.database import db, sql_debugging
 from honest_ab.template_helpers import register_helpers
 
 def create_app(config=None, test_db=False, login_mock=None):
@@ -36,7 +37,8 @@ def create_app(config=None, test_db=False, login_mock=None):
         host=app.config['DB_HOST'],
         database=app.config['DB_NAME']
     )
-    db.generate_mapping(create_tables=True)
+    with sql_debugging():
+        db.generate_mapping(create_tables=True)
 
     # Introduce custom template helpers
     register_helpers(app)

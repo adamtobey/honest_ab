@@ -17,6 +17,8 @@ class User(db.Entity, UserMixin):
     name = Required(str, unique=True)
     pass_hash = Required(str)
 
+    app_key = Required(uuid.UUID, default=uuid.uuid4)
+
     experiments = Set('Experiment')
 
     # TODO this already exists: User[pkey]
@@ -29,6 +31,9 @@ class User(db.Entity, UserMixin):
     # to the function registered with the LoginManager.
     def get_id(self):
         return str(self.get_pk())
+
+    def application_key(self):
+        return self.app_key.hex
 
     @staticmethod
     @db_session
