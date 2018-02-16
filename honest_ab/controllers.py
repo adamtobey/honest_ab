@@ -1,11 +1,15 @@
 import os
 import re
+import json
+from uuid import UUID
+from functools import wraps
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
-from honest_ab.login import login_user, logout_user, current_user, login_required
-from .distributed_regression import store_experiment_schema, validate_schema
 
+from honest_ab.login import login_user, logout_user, current_user, login_required
+from .writeahead import write_data_point_json, InvalidTestSpecError
+from .schemas import validate_schema, encode_input_point, get_experiment_schema, store_experiment_schema, SchemaViolationError
 from honest_ab.models import User, AuthenticationError, Experiment
-from honest_ab.database import CacheIndexError, db_session
+from honest_ab.database import *
 
 # Routing helpers
 
@@ -15,10 +19,67 @@ def create_controller(name):
     controller_routes[name] = blueprint
     return blueprint
 
+def create_api_controller(name):
+    return create_controller(f"api/v1/{name}")
+
 def register_controllers(app):
     for prefix, blueprint in controller_routes.items():
         app.register_blueprint(blueprint, url_prefix=f"/{prefix}")
 
+# ==== API ====
+api_experiments_controller = create_api_controller('experiments')
+
+# Authentication helpers
+APP_KEY_URL_PARAM = "app_key"
+def authenticate_api(fun):
+    @wraps(fun)
+    def handle_request(*args, **kwargs):
+        if APP_KEY_URL_PARAM in request.args:
+            user = User.from_app_key_hex(request.args[APP_KEY_URL_PARAM])
+            if user:
+                kwargs['api_user'] = user
+                return fun(*args, **kwargs)
+            else:
+                # CRITICAL: Don't let people explore the app_key space!
+                return abort(404)
+        else:
+            return abort(403) # TODO API-friendly json response
+
+    return handle_request
+
+def abort_wrong_user():
+    # CRITICAL: Don't let the user know this app key is in use
+    return abort(404)
+
+# Experiments controller
+
+# TODO this needs documentation
+@api_experiments_controller.route('/<experiment_uuid>/<variant>/<result>', methods=['POST'])
+@db_session
+@authenticate_api
+def post_experiment_result(experiment_uuid, variant, result, api_user):
+    # TODO to avoid leaking experiment UUID's that are in use,
+    # could select by uuid and user, but probably overkill.
+    experiment = Experiment[experiment_uuid]
+    if experiment == None:
+        return abort(404) # TODO API-friendly json response
+    elif experiment.user.get_pk() != api_user.get_pk():
+        return abort_wrong_user()
+    else:
+        schema = get_experiment_schema(experiment_uuid) # TODO if it doesn't exist?
+        try:
+            input_point = encode_input_point(schema, request.form, variant, result) # TODO errors
+        except SchemaViolationError as e:
+            return abort(400) # TODO include error message
+        try:
+            write_data_point_json(experiment_uuid, variant, result, json.dumps(input_point))
+        except InvalidTestSpecError as e:
+            return abort(400)
+
+        return "Success"
+
+
+# ==== Web UI ====
 
 # Experiments controller
 experiments_controller = create_controller('experiments')
@@ -46,13 +107,12 @@ def create_experiment():
         if not validate_schema(schema):
             raise ValueError("Invalid Schema")
 
-        experiment = Experiment(
+        experiment = Experiment.create_with_schema(
             name=request.form['name'],
             description=request.form['description'],
-            user=current_user()
+            user=current_user(),
+            schema=schema
         )
-
-        store_experiment_schema(experiment.get_pk(), schema)
         return "Experiment created"
     except ValueError as error:
         if "Experiment.name" in str(error):

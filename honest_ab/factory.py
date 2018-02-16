@@ -37,8 +37,7 @@ def create_app(config=None, test_db=False, login_mock=None):
         host=app.config['DB_HOST'],
         database=app.config['DB_NAME']
     )
-    with sql_debugging():
-        db.generate_mapping(create_tables=True)
+    db.generate_mapping(create_tables=True)
 
     # Introduce custom template helpers
     register_helpers(app)
@@ -49,7 +48,7 @@ def create_app(config=None, test_db=False, login_mock=None):
     login_manager.init_app(app)
     if login_mock != None:
         login_manager._load_user = login_mock
-    login_manager.user_loader(User.find_by_id)
+    login_manager.user_loader(User.__getitem__)
     login_manager.login_view = 'users.login_form'
 
     return app

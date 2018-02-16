@@ -7,12 +7,16 @@ name = "pypi"
 
 [packages]
 
-Flask = "*"
+flask = "*"
 pony = "*"
 "psycopg2" = "*"
-Flask-Login = "*"
+flask-login = "*"
 pytest = "*"
 passlib = "*"
+redis = "*"
+hiredis = "*"
+numpy = "*"
+pyarrow = "*"
 
 
 [dev-packages]

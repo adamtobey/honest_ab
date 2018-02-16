@@ -5,7 +5,7 @@ from test.predicates import requires_authentication
 
 from honest_ab.models import User, Experiment
 from honest_ab.database import select
-from honest_ab.distributed_regression import get_experiment_schema
+from honest_ab.schemas import get_experiment_schema
 
 class TestCreatingExperiments(object):
 
@@ -34,7 +34,7 @@ class TestCreatingExperiments(object):
         ))
 
         experiment = select(ex for ex in Experiment if ex.name == 'name').first()
-        eid = experiment.get_pk()
+        eid = experiment.get_pk().hex
 
         assert schema == get_experiment_schema(eid)
 

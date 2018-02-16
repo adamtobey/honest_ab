@@ -32,7 +32,7 @@ class TestIds(object):
 
         assert int(user.get_id()) == user.get_pk()
 
-        lookup = User.find_by_id(user.get_id())
+        lookup = User[user.get_id()]
         assert lookup == user
 
 # TODO test whether users are actually logged in with flask-login

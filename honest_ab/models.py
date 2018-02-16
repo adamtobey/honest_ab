@@ -4,6 +4,10 @@ from flask_login.mixins import UserMixin
 from honest_ab.database import *
 from honest_ab.crypto import password_context
 
+# TODO cleanup
+from .schemas import validate_schema, encode_input_point, get_experiment_schema, store_experiment_schema, SchemaViolationError
+from .processing import initialize_processing_directory
+
 # TODO create, update timestamps?
 
 # Users
@@ -21,10 +25,11 @@ class User(db.Entity, UserMixin):
 
     experiments = Set('Experiment')
 
-    # TODO this already exists: User[pkey]
+    @staticmethod
     @db_session
-    def find_by_id(id):
-        return get(u for u in User if u.id == id)
+    def from_app_key_hex(uuid_hex):
+        id = uuid.UUID(uuid_hex)
+        return select(u for u in User if u.app_key == id).first()
 
     # Required for flask_login. This will be the ID stored in the
     # Session and will be used later to look up the user by according
@@ -68,7 +73,7 @@ class User(db.Entity, UserMixin):
         pass_hash = password_context.hash(password_1)
         user = User(name=username, pass_hash=pass_hash)
 
-        flush() #?
+        flush() #TODO necessary?
 
         return user
 
@@ -85,7 +90,20 @@ class Experiment(db.Entity):
     user = Required(User, index=True)
 
     # Names must be unique for each user
+    # TODO actually using uuid for the API route, so why this constraint?
     composite_key(name, user)
 
     # TODO length
     description = Optional(str)
+
+    @staticmethod
+    @db_session
+    def create_with_schema(**kwargs):
+        schema = kwargs['schema']
+        del kwargs['schema']
+        exp = Experiment(**kwargs)
+        flush()
+        eid = exp.get_pk().hex
+        store_experiment_schema(eid, schema)
+        initialize_processing_directory(eid, schema)
+        return exp
