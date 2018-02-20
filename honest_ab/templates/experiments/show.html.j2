@@ -1,0 +1,79 @@
+{% extends 'common/base.html.j2' %}
+
+{% block content %}
+<h3>{{ experiment.name }}</h3>
+
+<div class="card result-card">
+  <div class="card-body">
+    <h5 class="card-title">Experiment Details</h5>
+    <table class="table">
+      <tbody>
+        {% for title, value in experiment.details.items() %}
+          <tr>
+            <th scope="row"> {{ title }} </th>
+            <td> {{ value }} </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card result-card">
+  <div class="card-body">
+    <h5 class="card-title">Overall Progress</h5>
+    <table class="table">
+      <tbody>
+        {% for metric, value in experiment.summary.items() %}
+          <tr>
+            <th scope="row"> {{ metric }} </th>
+            <td> {{ value }} </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if experiment.insights %}
+  <div class="card result-card">
+    <div class="card-body">
+      <h5 class="card-title">Feature Insights</h5>
+      <table class="table">
+        <tbody>
+          {% for feature, insight in experiment.insights.items() %}
+            <tr>
+              <th scope="row"> {{ feature }} </th>
+              <td> {{ insight }} </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card result-card">
+  <div class="card-body">
+    <h5 class="card-title">Results by Variant</h5>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col"> Metric </th>
+          <th scope="col"> A </th>
+          <th scope="col"> B </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for metric, (value_a, value_b) in experiment.variants.items() %}
+          <tr>
+            <th scope="row"> {{ metric }} </th>
+            <td> {{ value_a }} </td>
+            <td> {{ value_b }} </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,10 +1,12 @@
 import pytest
 from flask import _request_ctx_stack, has_request_context
 from flask_login import AnonymousUserMixin
+
 from honest_ab.factory import create_app
 from honest_ab.database import db, flush
-
-from honest_ab.models import User
+from honest_ab.schema import Schema
+from honest_ab.experiment_state import SerializedExperimentState
+from honest_ab.models import User, Experiment
 
 class MockLogin(object):
 
@@ -39,6 +41,17 @@ def auth():
     auth_instance.logout()
     yield auth_instance
     auth_instance.logout()
+
+def make_experiment(user, schema):
+    exp = Experiment(
+        name="Test Experiment",
+        user=user
+    )
+    exp.flush()
+    eid = exp.get_pk().hex
+    Schema(eid, schema).save()
+    SerializedExperimentState.initialize(eid)
+    return exp
 
 def make_user(username="test", password="password"):
     user = User.create(

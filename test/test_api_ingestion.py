@@ -1,11 +1,11 @@
 import json
 
-from honest_ab.schemas import store_experiment_schema
+from honest_ab.schema import Schema
 from honest_ab.controllers import APP_KEY_URL_PARAM
 from honest_ab.models import Experiment
 from honest_ab.compute import pp
 from honest_ab.config import config
-from honest_ab.processing import _pop_batch
+from honest_ab.redis import *
 
 from .fixtures import *
 from .predicates import *
@@ -26,22 +26,16 @@ class TestApiIngestion(object):
             route = f"{route}?{APP_KEY_URL_PARAM}={key}"
         return route
 
-    def make_experiment(self, user, schema=schema):
-        return Experiment.create_with_schema(
-            name="Test Experiment",
-            user=user,
-            schema=schema
-        )
 
     def test_requires_authentication(self, client):
-        response = client.post(self.make_route(self.make_experiment(make_user())), data=self.payload)
+        response = client.post(self.make_route(make_experiment(make_user(), self.schema)), data=self.payload)
 
         assert requires_app_key(response)
 
     def test_404s_with_valid_experiment_wrong_user(self, client):
         user1 = make_user()
         user2 = make_user("Joe")
-        ex_u2 = self.make_experiment(user2)
+        ex_u2 = make_experiment(user2, self.schema)
         route = self.make_route(ex_u2, user1.application_key())
 
         response = client.post(route, data=self.payload)
@@ -50,7 +44,7 @@ class TestApiIngestion(object):
 
     def test_400s_with_variant_not_a_or_b(self, client):
         user = make_user()
-        ex = self.make_experiment(user)
+        ex = make_experiment(user, self.schema)
         route = self.make_route(ex, user.application_key(), variant="C")
 
         response = client.post(route, data=self.payload)
@@ -59,7 +53,7 @@ class TestApiIngestion(object):
 
     def test_400s_with_result_not_success_or_failure(self, client):
         user = make_user()
-        ex = self.make_experiment(user)
+        ex = make_experiment(user, self.schema)
         route = self.make_route(ex, user.application_key(), result="maybe")
 
         response = client.post(route, data=self.payload)
@@ -68,7 +62,7 @@ class TestApiIngestion(object):
 
     def test_400s_with_missing_data(self, client):
         user = make_user()
-        ex = self.make_experiment(user)
+        ex = make_experiment(user, self.schema)
         route = self.make_route(ex, user.application_key())
 
         response = client.post(route, data=dict(wrong_key="doesn't matter"))
@@ -77,14 +71,14 @@ class TestApiIngestion(object):
 
     def test_stores_data_point_and_ignores_extra_features(self, client):
         user = make_user()
-        ex = self.make_experiment(user)
+        ex = make_experiment(user, self.schema)
         route = self.make_route(ex, user.application_key())
 
         response = client.post(route, data={'extra': 'ok', **self.payload})
 
         assert response.status_code == 200
 
-        data = _pop_batch(ex.get_pk().hex)
+        data = rd.lrange(rd_experiment_key(ex.get_pk().hex, 'wal'), 0, -1)
         pl = json.loads(data[0].decode('utf-8'))
 
         for key, val in self.payload.items():
@@ -97,7 +91,7 @@ class TestApiIngestion(object):
         try:
             config['batch_size'] = 1
             user = make_user()
-            ex = self.make_experiment(user)
+            ex = make_experiment(user, self.schema)
             route = self.make_route(ex, user.application_key())
 
             client.post(route, data={'extra': 'ok', **self.payload})
@@ -105,8 +99,8 @@ class TestApiIngestion(object):
 
             assert response.status_code == 200
 
+            # TODO fragile test
             assert len(pp.submits) == 2
-            assert pp.submits[0][0] == 'process_batch'
-            assert pp.submits[0][2]['experiment_uuid_hex'] == ex.get_pk().hex
+            assert pp.submits[0][0] == 'BatchStatisticsProcessor.process'
         finally:
             config['batch_size'] = _batches

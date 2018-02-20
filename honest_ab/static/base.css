@@ -4,6 +4,8 @@
   margin: auto;
 }
 .main-container {
+  max-width: 720px;
+  margin: auto;
   padding: 20px 15px;
 }
 
@@ -19,6 +21,10 @@
   flex-basis: auto;
 }
 
+/* Index listing results */
+.list-result {
+  margin: 10px 0px;
+}
 
 /* Schema creator */
 .schema-creator-row {
@@ -30,4 +36,9 @@
 
 .schema-creator-field {
   margin: 0px 5px;
+}
+
+/* Experiment results */
+.result-card {
+  margin: 15px 0px;
 }

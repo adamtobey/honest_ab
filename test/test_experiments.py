@@ -5,7 +5,7 @@ from test.predicates import requires_authentication
 
 from honest_ab.models import User, Experiment
 from honest_ab.database import select
-from honest_ab.schemas import get_experiment_schema
+from honest_ab.schema import Schema
 
 class TestCreatingExperiments(object):
 
@@ -36,7 +36,7 @@ class TestCreatingExperiments(object):
         experiment = select(ex for ex in Experiment if ex.name == 'name').first()
         eid = experiment.get_pk().hex
 
-        assert schema == get_experiment_schema(eid)
+        assert schema == Schema.for_experiment(eid).as_json()
 
     # TODO test an invalid schema when schema validation is implemented
 
@@ -56,7 +56,7 @@ class TestCreatingExperiments(object):
             description='Something'
         ))
 
-        assert(b"must have a name" in response.data)
+        assert(b"Experiment.name is required" in response.data)
 
     def test_succeeds_without_description(self, client, auth):
         user = make_user()
@@ -79,24 +79,6 @@ class TestCreatingExperiments(object):
         ))
 
         assert(b"Experiment created" in response.data)
-
-    def test_fails_with_duplicate_name(self, client, auth):
-        user = make_user()
-        auth.login(user)
-
-        response = client.post('experiments/create', follow_redirects=True, data=dict(
-            name='my experiment',
-            description='Something'
-        ))
-
-        assert(b"Experiment created" in response.data)
-
-        response = client.post('experiments/create', follow_redirects=True, data=dict(
-            name='my experiment',
-            description='Something else'
-        ))
-
-        assert(b"names must be unique" in response.data)
 
     def test_succeeds_with_duplicate_name_but_different_user(self, client, auth):
         user1 = make_user()

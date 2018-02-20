@@ -1,4 +1,3 @@
-from pdb import set_trace
 from flask import Flask
 from honest_ab.login import LoginManager
 
@@ -48,7 +47,7 @@ def create_app(config=None, test_db=False, login_mock=None):
     login_manager.init_app(app)
     if login_mock != None:
         login_manager._load_user = login_mock
-    login_manager.user_loader(User.__getitem__)
+    login_manager.user_loader(User.get_by_id)
     login_manager.login_view = 'users.login_form'
 
     return app

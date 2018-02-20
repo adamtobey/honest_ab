@@ -1,14 +1,11 @@
 import uuid
+from datetime import datetime
 from flask_login.mixins import UserMixin
 
 from honest_ab.database import *
 from honest_ab.crypto import password_context
 
-# TODO cleanup
-from .schemas import validate_schema, encode_input_point, get_experiment_schema, store_experiment_schema, SchemaViolationError
-from .processing import initialize_processing_directory
-
-# TODO create, update timestamps?
+from .schema import Schema
 
 # Users
 
@@ -24,6 +21,14 @@ class User(db.Entity, UserMixin):
     app_key = Required(uuid.UUID, default=uuid.uuid4)
 
     experiments = Set('Experiment')
+
+    # This method seems redundant, but it's necessary since flask_login doesn't
+    # handle Pony DB sessions, so this method adds a DB session when calling this
+    # method from outside of one.
+    @staticmethod
+    @db_session
+    def get_by_id(user_id):
+        return User[user_id]
 
     @staticmethod
     @db_session
@@ -72,8 +77,7 @@ class User(db.Entity, UserMixin):
 
         pass_hash = password_context.hash(password_1)
         user = User(name=username, pass_hash=pass_hash)
-
-        flush() #TODO necessary?
+        user.flush()
 
         return user
 
@@ -89,21 +93,7 @@ class Experiment(db.Entity):
     name = Required(str)
     user = Required(User, index=True)
 
-    # Names must be unique for each user
-    # TODO actually using uuid for the API route, so why this constraint?
-    composite_key(name, user)
+    created_at = Required(datetime, default=datetime.now())
 
     # TODO length
     description = Optional(str)
-
-    @staticmethod
-    @db_session
-    def create_with_schema(**kwargs):
-        schema = kwargs['schema']
-        del kwargs['schema']
-        exp = Experiment(**kwargs)
-        flush()
-        eid = exp.get_pk().hex
-        store_experiment_schema(eid, schema)
-        initialize_processing_directory(eid, schema)
-        return exp

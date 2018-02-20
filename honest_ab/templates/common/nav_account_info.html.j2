@@ -1,11 +1,9 @@
 {% if is_user(current_user) %}
-  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button">
-      {{ current_user.name }}
-    </a>
-    <div class="dropdown-menu">
-      <a class="dropdown-item" href="/users/perform_logout">Log Out</a>
-    </div>
+  <li class="nav-item">
+    <span class="navbar-text">Hi {{ current_user.name }}</span>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="/users/perform_logout">Log Out</a>
   </li>
 {% else %}
   <li class="nav-item">

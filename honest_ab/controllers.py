@@ -7,11 +7,16 @@ from flask import Blueprint, render_template, abort, request, redirect, url_for,
 
 from honest_ab.login import login_user, logout_user, current_user, login_required
 from .writeahead import write_data_point_json, InvalidTestSpecError
-from .schemas import validate_schema, encode_input_point, get_experiment_schema, store_experiment_schema, SchemaViolationError
+from .schema import Schema, InvalidSchemaError, SchemaViolationError
+from .experiment_state import SerializedExperimentState
 from honest_ab.models import User, AuthenticationError, Experiment
 from honest_ab.database import *
+from .facades import ExperimentResults
 
 # Routing helpers
+
+def default_page():
+    return url_for('experiments.list_experiments')
 
 controller_routes = dict()
 def create_controller(name):
@@ -66,9 +71,10 @@ def post_experiment_result(experiment_uuid, variant, result, api_user):
     elif experiment.user.get_pk() != api_user.get_pk():
         return abort_wrong_user()
     else:
-        schema = get_experiment_schema(experiment_uuid) # TODO if it doesn't exist?
+        # TODO if it doesn't exist?
+        schema = Schema.for_experiment(experiment_uuid)
         try:
-            input_point = encode_input_point(schema, request.form, variant, result) # TODO errors
+            input_point = schema.encode_input_point(request.form, variant, result)
         except SchemaViolationError as e:
             return abort(400) # TODO include error message
         try:
@@ -84,51 +90,47 @@ def post_experiment_result(experiment_uuid, variant, result, api_user):
 # Experiments controller
 experiments_controller = create_controller('experiments')
 
+@experiments_controller.route("/all")
+@login_required
+@db_session
+def list_experiments():
+    user = current_user()
+    experiments = user.experiments
+    return render_template("list.html.j2", experiments=experiments)
+
+@experiments_controller.route('/<experiment_uuid_hex>/show')
+@login_required
+@db_session
+def show_experiment(experiment_uuid_hex):
+    experiment_facade = ExperimentResults(experiment_uuid_hex)
+    if experiment_facade.experiment.user != current_user():
+        return abort(404)
+    else:
+        return render_template('show.html.j2', experiment=experiment_facade)
+
 @experiments_controller.route('/create', methods=['POST'])
 @login_required
 @db_session
 def create_experiment():
     try:
-        schema_names = dict()
-        schema_types = dict()
-        for form_key, value in request.form.items():
-            m = re.match("^schema_field_(\d+)_(name|type)", form_key)
-            if m:
-                schema_id, field_type = m.group(1, 2)
-                if field_type == "name":
-                    schema_names[schema_id] = value
-                else:
-                    schema_types[schema_id] = value
-
-        schema = {
-            schema_names[s_id]: schema_types[s_id]
-            for s_id in schema_names.keys()
-        }
-        if not validate_schema(schema):
-            raise ValueError("Invalid Schema")
-
-        experiment = Experiment.create_with_schema(
+        exp = Experiment( # Raises ValueError
             name=request.form['name'],
             description=request.form['description'],
             user=current_user(),
-            schema=schema
         )
-        return "Experiment created"
-    except ValueError as error:
-        if "Experiment.name" in str(error):
-            flash("Experiment must have a name", category="danger")
-            return redirect(url_for('experiments.new_experiment'))
-        elif "Invalid Schema" in str(error):
-            flash("Invalid schema", category="danger") #TODO unhelpful
-            return redirect(url_for('experiments.new_experiment'))
-        else:
-            raise error
-    # TODO pony.orm.core.TransactionIntegrityError: Object Experiment[UUID('04a65b3c-1ee1-486d-a027-93861e1e386e'
-    # )] cannot be stored in the database. IntegrityError: duplicate key value violates unique constraint "u
-    # nq_experiment__name_user"
-    # DETAIL:  Key (name, "user")=(New Experiment, 3) already exists.
-    except CacheIndexError as error:
-        flash("Experiment names must be unique", category="danger")
+        exp.flush()
+        eid = exp.get_pk().hex
+
+        Schema.initialize_from_form(eid, request.form) # Raises InvalidSchemaError
+        SerializedExperimentState.initialize(eid)
+
+        flash('Experiment created', category='success')
+        return redirect(url_for('experiments.show_experiment', experiment_uuid_hex=exp.get_pk().hex))
+    except InvalidSchemaError as e:
+        flash(str(e), category="danger")
+        return redirect(url_for('experiments.new_experiment'))
+    except ValueError as e:
+        flash(str(e), category="danger")
         return redirect(url_for('experiments.new_experiment'))
 
 @experiments_controller.route('/new')
@@ -142,9 +144,11 @@ users_controller = create_controller('users')
 @users_controller.route('/perform_logout')
 def perform_logout():
     logout_user()
-    return "Logged out" # TODO
+    flash('Logged out', category='success')
+    return redirect(url_for('users.login_form'))
 
 @users_controller.route('/perform_login', methods=['POST'])
+@db_session
 def perform_login():
     try:
         user = User.for_login(
@@ -153,7 +157,8 @@ def perform_login():
         )
         login_user(user)
 
-        return "Logged in" # TODO
+        flash('Logged in', category='success')
+        return redirect(default_page())
     except AuthenticationError as error:
         flash(str(error), category='danger')
         return redirect(url_for('users.login_form'))
@@ -167,6 +172,7 @@ def new_user():
     return render_template("join.html.j2")
 
 @users_controller.route('/create', methods=['POST'])
+@db_session
 def create_user():
     try:
         user = User.create(
@@ -176,7 +182,8 @@ def create_user():
         )
         login_user(user)
 
-        return "Your account was created" #TODO
+        flash("Your account was created", category='success')
+        return redirect(default_page())
     except (AuthenticationError, ValueError) as error:
         flash(str(error), category='danger')
         return redirect(url_for('users.new_user'))

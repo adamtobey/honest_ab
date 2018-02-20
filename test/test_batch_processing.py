@@ -1,13 +1,14 @@
 import json
 import numpy as np
-from pdb import set_trace
 
-from honest_ab.serialization import serialize_matrix, deserialize_matrix, experiment_path
-from honest_ab.schemas import store_experiment_schema
+from honest_ab.schema import Schema
 from honest_ab.controllers import APP_KEY_URL_PARAM
 from honest_ab.models import Experiment
 from honest_ab.config import config
 from honest_ab.compute import pp
+from honest_ab.facades import ExperimentResults
+from honest_ab.experiment_state import SerializedExperimentState
+from honest_ab.experiment_constants import *
 
 from .fixtures import *
 from .predicates import *
@@ -19,13 +20,6 @@ class TestRegressionUpdates(object):
         "d": "numeric",
         "u": "numeric"
     }
-
-    def make_experiment(self, user, schema=schema):
-        return Experiment.create_with_schema(
-            name="Test Experiment",
-            user=user,
-            schema=schema
-        )
 
     def submit_data(self, data, experiment, client, force_flushes=2):
         if force_flushes:
@@ -55,9 +49,9 @@ class TestRegressionUpdates(object):
         mu = cov @ inv_cov_init @ mu_init + cov @ X.T @ y / sy
         return cov, mu
 
-    def test_regression_update(self, client):
+    def test_discriminative_features(self, client):
         user = make_user()
-        ex = self.make_experiment(user)
+        ex = make_experiment(user, self.schema)
 
         data = {
             ('a', 'success'): dict(d=100, u=10),
@@ -69,20 +63,32 @@ class TestRegressionUpdates(object):
         self.submit_data(data, ex, client)
         batches = self.encode_batches(data)
 
-        regression_path = experiment_path(ex.get_pk().hex)
+        exf = ExperimentResults(ex.get_pk().hex)
+
+    def test_regression_update(self, client):
+        user = make_user()
+        exp = make_experiment(user, self.schema)
+
+        data = {
+            ('a', 'success'): dict(d=100, u=10),
+            ('a', 'success'): dict(d=112, u=10),
+            ('a', 'failure'): dict(d=4, u=10),
+            ('b', 'success'): dict(d=10, u=10),
+            ('b', 'failure'): dict(d=100, u=10),
+        }
+        self.submit_data(data, exp, client)
+        batches = self.encode_batches(data)
 
         sy = 0.5
         inv_cov_init = np.identity(2)
         mu_init = np.zeros((2,))
 
+        ex = SerializedExperimentState(exp.get_pk().hex)
         for variant, (X, y) in batches.items():
-            xx = deserialize_matrix(regression_path, variant, 'xx.dat')
-            xy = deserialize_matrix(regression_path, variant, 'xy.dat')
-
             # TODO use the route that actually gives these computations to test
             # end to end when that's implemented
-            cov = np.linalg.inv(sy * inv_cov_init + xx) * sy
-            mu = cov @ inv_cov_init @ mu_init + cov @ xy / sy
+            cov = np.linalg.inv(sy * inv_cov_init + ex.by_variant[variant][XX].get()) * sy
+            mu = cov @ inv_cov_init @ mu_init + cov @ ex.by_variant[variant][XY].get() / sy
 
             rcov, rmu = self.reference_regression(X, y, inv_cov_init, mu_init, sy)
 
