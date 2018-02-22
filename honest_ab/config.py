@@ -9,7 +9,7 @@ config.update(dict(
     redis_port=6379,
     redis_db=0,
 
-    batch_size=480,
+    batch_size=30,
 
     stats_base_dir=os.path.abspath(os.path.join('.', 'stats'))
 ))

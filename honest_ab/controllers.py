@@ -188,6 +188,7 @@ def create_user():
         flash(str(error), category='danger')
         return redirect(url_for('users.new_user'))
 
+# TODO nav
 @users_controller.route('/application_key')
 @login_required
 def user_application_key():
