@@ -1,9 +1,11 @@
 from datetime import datetime
 from collections import defaultdict
+import numpy as np
 import uuid
 
 from .models import Experiment
 from .experiment_state import SerializedExperimentState
+from .experiment_constants import *
 
 # TODO test
 class ExperimentResults(object):
@@ -19,7 +21,7 @@ class ExperimentResults(object):
             'Hits': (a_pos + a_neg, b_pos + b_neg),
             'Successes': (a_pos, b_pos),
             'Failures': (a_neg, b_neg),
-            'Estimated Fitness': (1 - self.ex.b_loss.get(), self.ex.b_loss.get())
+            'Estimated Fitness': self._fitness(a_pos, a_neg, b_pos, b_neg)
         }
         self.summary = {
             'Running for': self._test_duration(),
@@ -33,6 +35,19 @@ class ExperimentResults(object):
         }
         self.insights = self._insights() if self.ex.reached_significance.get() else None
 
+    def _fitness(self, a_pos, a_neg, b_pos, b_neg):
+        all_a = a_pos + a_neg
+        all_b = b_pos + b_neg
+        if all_a > 0:
+            a_fit = self._format_decimal(a_pos / all_a)
+        else:
+            a_fit = "N/A"
+        if all_b > 0:
+            b_fit = self._format_decimal(b_pos / all_b)
+        else:
+            b_fit = "N/A"
+        return (a_fit, b_fit)
+
     def _pp_sign(self, x):
         if x > 0:
             return "Positive"
@@ -44,7 +59,7 @@ class ExperimentResults(object):
         out = {}
         ind = defaultdict(defaultdict)
         for variant in VARIANTS:
-            mu = self.ex.by_variant[variant][W_MLE].get()
+            mu = self.ex.by_variant[variant][MLE_WEIGHTS].get()
             dm = self.ex.by_variant[variant][DISCRIMINITIVE_MASK].get()
             for i, pair in enumerate(zip(dm, mu)):
                 ind[i][variant] = pair
@@ -73,7 +88,7 @@ class ExperimentResults(object):
         return out
 
     def _format_decimal(self, x):
-        return x #TODO
+        return "{0:.2f}".format(x)
 
     def _test_duration(self):
         delta = datetime.now() - self.experiment.created_at

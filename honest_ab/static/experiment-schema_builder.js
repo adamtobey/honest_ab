@@ -6,7 +6,7 @@ $(document).ready(function() {
 
   function addField() {
     var row = $("<div />");
-    var id = "create-experiment_schema_field_" + fieldCount;
+    var id = fieldCount;
     row.attr("id", id);
     row.attr("class", "schema-creator-row");
 

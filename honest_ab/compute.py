@@ -17,7 +17,10 @@ class PoolMock(object):
     def reset(self):
         self.submits = []
 
-if config.get('testing'):
-    pp = PoolMock()
-else:
-    pp = ThreadPoolExecutor()
+# TODO for seeing errors
+pp = PoolMock()
+
+# if config.get('testing'):
+#     pp = PoolMock()
+# else:
+#     pp = ThreadPoolExecutor()

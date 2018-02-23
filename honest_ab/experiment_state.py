@@ -41,7 +41,7 @@ class SerializedExperimentState(object):
         }
         self._state = self._serialized('sig_state.dat')
         (
-            self.b_loss,
+            self.pr_b_gt_a,
             self.significance,
             self.reached_significance
         ) = [FieldAccessor(self._state, i) for i in range(3)]

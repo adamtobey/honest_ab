@@ -18,25 +18,15 @@ class SignificanceModel(object):
 
         self.ex.outcome_counts.incr(np.array([a_pos, a_neg, b_pos, b_neg]))
 
-        self.ex.b_loss.set(self._b_loss(*self.ex.outcome_counts.get()))
-        self.ex.significance.set(2 * abs(0.5 - self.ex.b_loss.get()))
+        self.ex.pr_b_gt_a.set(self._pr_b_gt_a(self.ex.outcome_counts.get()))
+        self.ex.significance.set(max(self.ex.pr_b_gt_a.get(), 1 - self.ex.pr_b_gt_a.get()))
         if self.ex.significance.get() > self.CRITICAL_SIGNIFICANCE:
             # TODO introduce priors for regression model
             self.ex.reached_significance.set(True)
 
+    def _h(self, aA, bA, aB, bB, i):
+        return np.exp(betaln(aA + i, bB + bA) - betaln(1 + i, bB) - betaln(aA, bA)) / (bB + i)
 
-    def _hh(self, a, b, c, d, j):
-        return np.exp(betaln(a + j, b + d) - np.log(d + j) - betaln(1 + j, d) - betaln(a, b))
-
-    def _h(self, a, b, c, d):
-        return 1 - sum([self._hh(a, b, c, d, j) for j in range(c)])
-
-    def _br(self, x, y):
-        return np.exp(betaln(x + 1, y) - betaln(x, y))
-
-    def _stable_zeros(self, *X):
-        return [self.EPS if x == 0 else x for x in X]
-
-    def _b_loss(self, a_pos, a_neg, b_pos, b_neg):
-        a_pos, a_neg, _b_pos, b_neg = self._stable_zeros(a_pos, a_neg, b_pos, b_neg)
-        return max(0, self._br(a_pos, a_neg) * self._h(a_pos + 1, a_neg, b_pos, b_neg) - self._br(_b_pos, b_neg) * self._h(a_pos, a_neg, b_pos + 1, b_neg))
+    def _pr_b_gt_a(self, outcome_counts):
+        aA, bA, aB, bB = outcome_counts + 1
+        return sum([self._h(aA, bA, aB, bB, i) for i in range(aB - 1)])
