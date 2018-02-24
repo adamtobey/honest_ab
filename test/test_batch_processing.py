@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from collections import defaultdict
 
 from honest_ab.schema import Schema
 from honest_ab.controllers import APP_KEY_URL_PARAM
@@ -13,12 +14,19 @@ from honest_ab.experiment_constants import *
 from .fixtures import *
 from .predicates import *
 
-class TestRegressionUpdates(object):
+class TestSufficientStatistics(object):
 
-    # TODO this should be a fixture
     schema = {
         "d": "numeric",
         "u": "numeric"
+    }
+
+    data = {
+        ('a', 'success'): dict(d=100, u=10),
+        ('a', 'success'): dict(d=112, u=10),
+        ('a', 'failure'): dict(d=4, u=10),
+        ('b', 'success'): dict(d=10, u=10),
+        ('b', 'failure'): dict(d=100, u=10),
     }
 
     def submit_data(self, data, experiment, client, force_flushes=2):
@@ -33,64 +41,23 @@ class TestRegressionUpdates(object):
                 config['batch_size'] = _bs
                 assert len(pp.submits) >= 2
 
-    def encode_batches(self, data):
-        batches = dict(a=([], []), b=([], []))
-        for (variant, result), point in data.items():
-            X, y = batches[variant]
-            X.append(np.array(list(point.values())))
-            y.append(result == 'success')
-        return {
-            variant: (np.array(X), np.array(y))
-            for variant, (X, y) in batches.items()
-        }
-
-    def reference_regression(self, X, y, inv_cov_init, mu_init, sy):
-        cov = sy * np.linalg.inv(sy * inv_cov_init + X.T @ X)
-        mu = cov @ inv_cov_init @ mu_init + cov @ X.T @ y / sy
-        return cov, mu
-
-    def test_discriminative_features(self, client):
-        user = make_user()
-        ex = make_experiment(user, self.schema)
-
-        data = {
-            ('a', 'success'): dict(d=100, u=10),
-            ('a', 'success'): dict(d=112, u=10),
-            ('a', 'failure'): dict(d=4, u=10),
-            ('b', 'success'): dict(d=10, u=10),
-            ('b', 'failure'): dict(d=100, u=10),
-        }
-        self.submit_data(data, ex, client)
-        batches = self.encode_batches(data)
-
-        exf = ExperimentResults(ex.get_pk().hex)
-
-    def test_regression_update(self, client):
+    def test_variance(self, client):
         user = make_user()
         exp = make_experiment(user, self.schema)
 
-        data = {
-            ('a', 'success'): dict(d=100, u=10),
-            ('a', 'success'): dict(d=112, u=10),
-            ('a', 'failure'): dict(d=4, u=10),
-            ('b', 'success'): dict(d=10, u=10),
-            ('b', 'failure'): dict(d=100, u=10),
-        }
-        self.submit_data(data, exp, client)
-        batches = self.encode_batches(data)
+        self.submit_data(self.data, exp, client)
 
-        sy = 0.5
-        inv_cov_init = np.identity(2)
-        mu_init = np.zeros((2,))
+        d = defaultdict(lambda: defaultdict(list))
+        for (variant, outcome), data in self.data.items():
+            for i, val in enumerate(data.values()):
+                d[variant][i].append(val)
 
         ex = SerializedExperimentState(exp.get_pk().hex)
-        for variant, (X, y) in batches.items():
-            # TODO use the route that actually gives these computations to test
-            # end to end when that's implemented
-            cov = np.linalg.inv(sy * inv_cov_init + ex.by_variant[variant][XX].get()) * sy
-            mu = cov @ inv_cov_init @ mu_init + cov @ ex.by_variant[variant][XY].get() / sy
-
-            rcov, rmu = self.reference_regression(X, y, inv_cov_init, mu_init, sy)
-
-            assert np.allclose(cov, rcov)
-            assert np.allclose(mu, rmu)
+        for variant, data in d.items():
+            v = ex.by_variant[variant]
+            x_mean = v.x_mean.get()
+            xx_mean = v.xx_mean.get()
+            for i, values in sorted(data.items()):
+                ref_var = np.var(values)
+                acc_var = xx_mean[i] - x_mean[i] ** 2
+                assert abs(ref_var - acc_var) < 1e-6

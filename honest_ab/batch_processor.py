@@ -14,15 +14,13 @@ class BatchStatisticsProcessor(object):
         self.eid = experiment_uuid_hex
 
     def process(self):
-        print("Start Processing")
         json_batch = self._pop_batch()
         schema = Schema.for_experiment(self.eid)
-        batches_by_variant = schema.encode_batch_by_variant_with_bias(json_batch)
+        batches_by_variant = schema.encode_batch_by_variant(json_batch)
 
         with SerializedExperimentState(self.eid) as ex:
             SignificanceModel(ex).update(batches_by_variant)
             DiscriminitiveFeatureModel(ex).update(batches_by_variant)
-        print("Done processing")
 
     def _pop_batch(self):
         redis_key = rd_experiment_key(self.eid, 'wal')

@@ -59,9 +59,9 @@ class ExperimentResults(object):
         out = {}
         ind = defaultdict(defaultdict)
         for variant in VARIANTS:
-            mu = self.ex.by_variant[variant][MLE_WEIGHTS].get()
-            dm = self.ex.by_variant[variant][DISCRIMINITIVE_MASK].get()
-            for i, pair in enumerate(zip(dm, mu)):
+            mu = self.ex.by_variant[variant].mle_weights.get()
+            dm = self.ex.by_variant[variant].discriminitive_mask.get()
+            for i, pair in enumerate(zip(mu, dm)):
                 ind[i][variant] = pair
 
         def discriminitive_for_one(mu, feature, variant):
