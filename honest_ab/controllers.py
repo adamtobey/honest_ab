@@ -67,10 +67,15 @@ def abort_wrong_user():
     # CRITICAL: Don't let the user know this app key is in use
     return abort(404)
 
-# Home controller
+# Orphan routes
+
 @orphan_route('/')
 def home():
     return render_template('home.html.j2')
+
+@orphan_route('/documentation')
+def docs():
+    return render_template('docs.html.j2')
 
 # Experiments controller
 

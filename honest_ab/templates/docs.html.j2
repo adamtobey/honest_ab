@@ -1,0 +1,28 @@
+{% extends 'common/base.html.j2' %}
+
+{% block content %}
+  <h1>Concepts</h1>
+
+  <h3>Experiments</h3>
+  <p>
+    An Experiment represents a single A/B test and can be created in the web UI. Your app will use the API to post test observations - whether a user clicked, what variant they were shown, and some features about that user. Since Honest AB will analyze the incoming features, the data format must be consistent. Experiments are defined with Schemas declaring the fields that will be recorded on every request, created with the Experiment in the web UI.
+  </p>
+
+  <h1>API Documentation</h1>
+
+  <h3>Authentication</h3>
+  <p>
+    Use your app key to authenticate all API requests. All API endpoints accept a URL-encoded parameter <code>?app_key=&lt;your app key&gt;</code>.
+  </p>
+  <h3>API Routes</h3>
+  <p>
+    The API is scoped under <code>/api/v1</code>. Requests should look like <code>/api/v1/&lt;route&gt;</code>
+  </p>
+  <h3>Post Experiment Result</h3>
+  <p>
+    POST AB test results to <code>/experiments/&lt;experiment-uuid&gt;/&lt;variant&gt;/&lt;result&gt;</code>. <code>experiment-uuid</code> is the ID of the experiment, which can be found on the experiment page in the web UI. <code>variant</code> identifies the experience shown to the user, currently either 'a' or 'b'. <code>result</code> indicates success or failure and must take values 'success' or 'failure'. The route will respond with 200 if called correctly.
+  </p>
+  <p>
+    This route also accepts a JSON-encoded dictionary of input features for the observation. These are the features that will be analyzed for trends related to success or failure of each variant. This dictionary must contain every field in the experiment's schema or else the request will be aborted with code 400. Additional fields will be ignored without error.
+  </p>
+{% endblock %}
