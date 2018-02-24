@@ -31,6 +31,17 @@ def register_controllers(app):
     for prefix, blueprint in controller_routes.items():
         app.register_blueprint(blueprint, url_prefix=f"/{prefix}")
 
+orphan_routes = []
+def register_orphans(app):
+    for args, kwargs, handler in orphan_routes:
+        app.route(*args, **kwargs)(handler)
+
+def orphan_route(*route_args, **route_kwargs):
+    def orphan_decorator(fun):
+        orphan_routes.append((route_args, route_kwargs, fun))
+        return fun
+    return orphan_decorator
+
 # ==== API ====
 api_experiments_controller = create_api_controller('experiments')
 
@@ -55,6 +66,11 @@ def authenticate_api(fun):
 def abort_wrong_user():
     # CRITICAL: Don't let the user know this app key is in use
     return abort(404)
+
+# Home controller
+@orphan_route('/')
+def home():
+    return render_template('home.html.j2')
 
 # Experiments controller
 

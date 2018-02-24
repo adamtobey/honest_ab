@@ -6,7 +6,7 @@ import honest_ab.models
 
 from honest_ab.models import User
 
-from honest_ab.controllers import register_controllers
+from honest_ab.controllers import register_controllers, register_orphans
 from honest_ab.database import db, sql_debugging
 from honest_ab.template_helpers import register_helpers
 
@@ -26,6 +26,7 @@ def create_app(config=None, test_db=False, login_mock=None):
     app.config.update(config or {})
 
     # Routes
+    register_orphans(app)
     register_controllers(app)
 
     # Bind the database

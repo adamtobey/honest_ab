@@ -3,10 +3,13 @@
     <span class="navbar-text">Hi {{ current_user.name }}</span>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="/users/perform_logout">Log Out</a>
+    <a class="nav-link" href="{{ url_for('users.perform_logout') }}">Log Out</a>
   </li>
 {% else %}
   <li class="nav-item">
-    <a class="nav-link" href="/users/login">Log In</a>
+    <a class="nav-link" href="{{ url_for('users.login_form') }}">Log In</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('users.new_user') }}">Join</a>
   </li>
 {% endif %}
