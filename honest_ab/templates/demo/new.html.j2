@@ -7,8 +7,16 @@
 {% block content %}
   <h1>About the Demo</h1>
   <p>
-    Some starting info goes here.
+    This demo implements a generative statistical model of users reacting to an AB test. The purpose of generating data this way is to design test scenarios that have a known ideal outcome. In other words, the values that parameterize the demo also describe what the algorithms behind Honest AB should find, and this gives an easy way to test that the app's behavior matches our intentions.
   </p>
+  <p>
+    To run the demo you must design an experimental population with the form below. First, choose base rates for each variant. The generative model is designed so that the expected click rate of each variant over all the generated visitors matches these numbers. The report should reflect this by showing a fitness for each variant roughly matching these values. Next, design the user data schema. This is a combination of the schema (names and types) of the incoming user features that is specified when creating an experiment, as well as each field's designed effect on click rate for each variant. For example, choosing "Independent" for "A Correlation" tells the model to decide whether a visitor clicks independently of this feature when shown variant A. Choosing "Negative Linear" for "B Correlation" means that, when the visitor is shown variant B, the chance that they 'choose' to click varies inversely with this feature. Visitors who have small values for this feature are likely to click, and those with large values are unlikely. These correlation decisions should match the report given by Honest AB. If you chose a negative B correlation for feature "foo", the report should find that, for example, <em>Negative 'foo' significantly correlations with success of B.</em> (this message means that the feature is not also correlated with success of A).
+  </p>
+  <p>
+    The demo works by generating 1200 fake visitors, each of which has unique values for the features specified in the schema. As in a real AB test, each visitor is randomly assigned variant A or variant B. The model then randomly chooses whether to click, with the click chance depending on the chosen base rate for that variant as well as the values for the visitor's features and the way they're designed to correlate with success for that variant. Whether the visitor clicked as well as the variant they were shown and their features are then processed in exactly the same way as an equivalent call to the API would be. Each demo run creates a real experiment in the site and runs the same code that an end user would, only subverting the network requests.
+  </p>
+
+  <h1>Ok, I get it. Let's go!</h1>
   <div class="form-container">
     <form action="/demo/create" method="post">
       <h4>Expected Variant Rates</h4>
