@@ -6,12 +6,13 @@ from functools import wraps
 from flask import Blueprint, render_template, abort, request, redirect, url_for, flash
 
 from honest_ab.login import login_user, logout_user, current_user, login_required
-from .writeahead import write_data_point_json, InvalidTestSpecError
-from .schema import Schema, InvalidSchemaError, SchemaViolationError
+from .writeahead import write_data_point_json
+from .schema import Schema, InvalidSchemaError, SchemaViolationError, InvalidTestSpecError
 from .experiment_state import SerializedExperimentState
 from honest_ab.models import User, AuthenticationError, Experiment
 from honest_ab.database import *
 from .facades import ExperimentResults
+from .demo import Demo, DemoResults
 
 # Routing helpers
 
@@ -99,7 +100,7 @@ def post_experiment_result(experiment_uuid, variant, result, api_user):
         except SchemaViolationError as e:
             return abort(400) # TODO include error message
         try:
-            write_data_point_json(experiment_uuid, variant, result, json.dumps(input_point))
+            write_data_point_json(experiment_uuid, json.dumps(input_point))
         except InvalidTestSpecError as e:
             return abort(400)
 
@@ -107,6 +108,29 @@ def post_experiment_result(experiment_uuid, variant, result, api_user):
 
 
 # ==== Web UI ====
+
+# Demo Controller
+demo_controller = create_controller("demo")
+
+@demo_controller.route("/create", methods=['POST'])
+def create_demo():
+    try:
+        demo = Demo.initialize_from_form(request.form)
+        results_id = demo.run()
+        return redirect(url_for('demo.show_demo', demo_results_id=results_id))
+    except InvalidSchemaError as e:
+        flash(str(e), category="danger")
+        return redirect(url_for('demo.new_demo'))
+
+@demo_controller.route("/show/<demo_results_id>")
+def show_demo(demo_results_id):
+    demo_results = DemoResults.find_by_id(demo_results_id)
+    return render_template('demo/show.html.j2', results=demo_results, experiment=demo_results.experiment_facade())
+
+@demo_controller.route("/")
+def new_demo():
+    return render_template("demo/new.html.j2")
+
 
 # Experiments controller
 experiments_controller = create_controller('experiments')
@@ -117,7 +141,7 @@ experiments_controller = create_controller('experiments')
 def list_experiments():
     user = current_user()
     experiments = user.experiments
-    return render_template("list.html.j2", experiments=experiments)
+    return render_template("experiments/list.html.j2", experiments=experiments)
 
 @experiments_controller.route('/<experiment_uuid_hex>/show')
 @login_required
@@ -127,7 +151,7 @@ def show_experiment(experiment_uuid_hex):
     if experiment_facade.experiment.user != current_user():
         return abort(404)
     else:
-        return render_template('show.html.j2', experiment=experiment_facade)
+        return render_template('experiments/show.html.j2', experiment=experiment_facade)
 
 @experiments_controller.route('/create', methods=['POST'])
 @login_required
@@ -157,7 +181,7 @@ def create_experiment():
 @experiments_controller.route('/new')
 @login_required
 def new_experiment():
-    return render_template("new.html.j2")
+    return render_template("experiments/new.html.j2")
 
 # Users controller
 users_controller = create_controller('users')
@@ -186,11 +210,11 @@ def perform_login():
 
 @users_controller.route('/login')
 def login_form():
-    return render_template("login.html.j2")
+    return render_template("users/login.html.j2")
 
 @users_controller.route('/new')
 def new_user():
-    return render_template("join.html.j2")
+    return render_template("users/join.html.j2")
 
 @users_controller.route('/create', methods=['POST'])
 @db_session
@@ -214,4 +238,4 @@ def create_user():
 @login_required
 def user_application_key():
     app_key = current_user().application_key()
-    return render_template("app_key.html.j2", application_key=app_key)
+    return render_template("users/app_key.html.j2", application_key=app_key)

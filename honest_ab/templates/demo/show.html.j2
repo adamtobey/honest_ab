@@ -1,0 +1,34 @@
+{% extends 'common/base.html.j2' %}
+
+{% block content %}
+  <h1>Demo Results</h1>
+  
+  <div class="card result-card">
+    <div class="card-body">
+      <h5 class="card-title">Demo Schema</h5>
+      <table class="table">
+        <thead>
+          <tr>
+            {% for name in results.demo_schema_header() %}
+              <th scope="col">
+                {{ name }}
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, row in results.demo_schema().items() %}
+            <tr>
+              <th scope="row"> {{ name }} </th>
+              {% for val in row %}
+                <td> {{ val }} </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include 'experiments/_results.html.j2' %}
+{% endblock %}

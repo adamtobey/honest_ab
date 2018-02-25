@@ -11,6 +11,9 @@ class SchemaViolationError(RuntimeError):
 class InvalidSchemaError(RuntimeError):
     pass
 
+class InvalidTestSpecError(RuntimeError):
+    pass
+
 class Schema(object):
 
     @staticmethod
@@ -35,7 +38,9 @@ class Schema(object):
         if RESULT_KEY in schema_dict or VARIANT_KEY in schema_dict:
             raise InvalidSchemaError(f"{RESULT_KEY} and {VARIANT_KEY} are reserved names in the schema.")
 
-        Schema(experiment_uuid_hex, schema_dict).save()
+        schema = Schema(experiment_uuid_hex, schema_dict)
+        schema.save()
+        return schema
 
     @staticmethod
     def for_experiment(experiment_uuid_hex):
@@ -53,10 +58,16 @@ class Schema(object):
     def save(self):
         rd.set(rd_experiment_key(self.eid, 'schema'), json.dumps(self.schema))
 
-    def as_json(self):
+    def as_dict(self):
         return self.schema
 
     def encode_input_point(self, form_data, variant, result):
+        str_opts = lambda opts: " or ".join([f"'{opt}'" for opt in opts])
+        if variant not in VARIANTS:
+            raise InvalidTestSpecError(f"Variant must be either {str_opts(VARIANTS)}")
+        if result not in RESULTS:
+            raise InvalidTestSpecError(f"Result must be either {str_opts(RESULTS)}")
+
         try:
             features = {
                 feature_name: form_data[feature_name]

@@ -36,7 +36,7 @@ class TestCreatingExperiments(object):
         experiment = select(ex for ex in Experiment if ex.name == 'name').first()
         eid = experiment.get_pk().hex
 
-        assert schema == Schema.for_experiment(eid).as_json()
+        assert schema == Schema.for_experiment(eid).as_dict()
 
     # TODO test an invalid schema when schema validation is implemented
 

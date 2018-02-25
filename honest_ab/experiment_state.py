@@ -91,7 +91,7 @@ class SerializedVariantState(SerializedState):
 
     def initialize(self, dimension):
         self.mle_weights.initialize(np.zeros((dimension,)))
-        self.discriminitive_mask.initialize(np.zeros((dimension,)))
+        self.discriminitive_mask.initialize(np.zeros((dimension,), dtype='int8'))
 
         self.x_mean.initialize((dimension,))
         self.xx_mean.initialize((dimension,))

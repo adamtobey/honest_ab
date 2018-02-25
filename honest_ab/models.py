@@ -5,6 +5,7 @@ from flask_login.mixins import UserMixin
 from honest_ab.database import *
 from honest_ab.crypto import password_context
 
+from .redis import rd
 from .schema import Schema
 
 # Users
@@ -21,6 +22,19 @@ class User(db.Entity, UserMixin):
     app_key = Required(uuid.UUID, default=uuid.uuid4)
 
     experiments = Set('Experiment')
+
+    @staticmethod
+    @db_session
+    def demo_user():
+        # Not threadsafe, but OK if multiple demo users exist
+        demo_user_id = rd.get("demo-user")
+        if demo_user_id is None:
+            user = User.create("DemoUser", "DemoPass", "DemoPass")
+            user.flush()
+            rd.set("demo-user", user.get_pk())
+            return user
+        else:
+            return User[int(demo_user_id.decode('utf-8'))]
 
     # This method seems redundant, but it's necessary since flask_login doesn't
     # handle Pony DB sessions, so this method adds a DB session when calling this

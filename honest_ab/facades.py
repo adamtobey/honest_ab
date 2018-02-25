@@ -6,10 +6,12 @@ import uuid
 from .models import Experiment
 from .experiment_state import SerializedExperimentState
 from .experiment_constants import *
+from .database import *
 
 # TODO test
 class ExperimentResults(object):
 
+    @db_session
     def __init__(self, experiment_uuid_hex):
         self.id = experiment_uuid_hex
         self.experiment = Experiment[self.id]

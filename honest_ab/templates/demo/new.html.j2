@@ -1,0 +1,28 @@
+{% extends 'common/base.html.j2' %}
+
+{% block head %}
+  <script src="{{ url_for('static', filename='demo-schema_builder.js') }}" /></script>
+{% endblock %}
+
+{% block content %}
+  <h1>About the Demo</h1>
+  <p>
+    Some starting info goes here.
+  </p>
+  <div class="form-container">
+    <form action="/demo/create" method="post">
+      <h4>Expected Variant Rates</h4>
+      <div class="form-group">
+        <label for="variant_a_base_rate">A Click Rate</label>
+        <input id="variant_a_base_rate" type="number" value="0.6" max="1" min="0" step="0.01" name="variant_a_base_rate" />
+        <label for="variant_b_base_rate">B Click Rate</label>
+        <input id="variant_b_base_rate" type="number" value="0.4" max="1" min="0" step="0.01" name="variant_b_base_rate" />
+      </div>
+      <h4>Demo schema</h4>
+      <div class="form-group" id="create-demo_schema-container">
+        <div class="btn btn-primary js-add_schema_field">Add Field</div>
+      </div>
+      <button type="submit" class="btn btn-primary">Run the Test</button>
+    </form>
+  </div>
+{% endblock %}
