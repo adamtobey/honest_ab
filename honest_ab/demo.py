@@ -20,10 +20,14 @@ class DemoResults(object):
     def find_by_id(id):
         print_schema = json.loads(rd.get(f"demo:{id}:print_schema"))
         eid = rd.get(f"demo:{id}:eid").decode('utf-8')
-        return DemoResults(eid, print_schema)
+        base_rates = [
+            rd.get(f"demo:{id}:a_base_rate").decode("utf-8"),
+            rd.get(f"demo:{id}:b_base_rate").decode("utf-8"),
+        ]
+        return DemoResults(eid, print_schema, base_rates)
 
     @staticmethod
-    def generate(experiment_uuid_hex, schema_dict, print_correlation_dict):
+    def generate(experiment_uuid_hex, schema_dict, print_correlation_dict, base_rates):
         results_id = uuid4().hex
 
         print_schema_json = json.dumps({
@@ -37,11 +41,15 @@ class DemoResults(object):
         rd.set(f"demo:{results_id}:print_schema", print_schema_json)
         rd.set(f"demo:{results_id}:eid", experiment_uuid_hex)
 
+        rd.set(f"demo:{results_id}:a_base_rate", base_rates[0])
+        rd.set(f"demo:{results_id}:b_base_rate", base_rates[1])
+
         return results_id
 
-    def __init__(self, experiment_uuid_hex, print_schema):
+    def __init__(self, experiment_uuid_hex, print_schema, base_rates):
         self.eid = experiment_uuid_hex
         self.print_schema = print_schema
+        self.base_rates = base_rates
 
     def experiment_facade(self):
         return ExperimentResults(self.eid)
@@ -144,7 +152,7 @@ class Demo(object):
 
             self._add_result(input_point, variant_idx, did_click)
 
-        return DemoResults.generate(self.eid, self.schema.as_dict(), self.pretty_responses)
+        return DemoResults.generate(self.eid, self.schema.as_dict(), self.pretty_responses, self.variant_base_rates)
 
     def _add_result(self, input_point, variant_idx, did_click):
         variant = VARIANTS[variant_idx]

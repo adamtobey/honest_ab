@@ -61,6 +61,9 @@ class Schema(object):
     def as_dict(self):
         return self.schema
 
+    def feature_names(self):
+        return self.schema.keys()
+
     def encode_input_point(self, form_data, variant, result):
         str_opts = lambda opts: " or ".join([f"'{opt}'" for opt in opts])
         if variant not in VARIANTS:
@@ -71,7 +74,7 @@ class Schema(object):
         try:
             features = {
                 feature_name: form_data[feature_name]
-                for feature_name in self.schema.keys()
+                for feature_name in self.feature_names()
             }
             features[VARIANT_KEY] = variant
             features[RESULT_KEY] = result

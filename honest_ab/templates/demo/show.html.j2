@@ -2,10 +2,33 @@
 
 {% block content %}
   <h1>Demo Results</h1>
-  
+
   <div class="card result-card">
     <div class="card-body">
-      <h5 class="card-title">Demo Schema</h5>
+      <h5 class="card-title">Base Rates</h5>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">
+              A Base Rate
+            </th>
+            <th scope="col">
+              B Base Rate
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              {{ results.base_rates[0] }}
+            </td>
+            <td>
+              {{ results.base_rates[1] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h5 class="card-title">Schema</h5>
       <table class="table">
         <thead>
           <tr>

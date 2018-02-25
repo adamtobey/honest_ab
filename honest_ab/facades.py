@@ -7,6 +7,7 @@ from .models import Experiment
 from .experiment_state import SerializedExperimentState
 from .experiment_constants import *
 from .database import *
+from .schema import Schema
 
 # TODO test
 class ExperimentResults(object):
@@ -58,29 +59,31 @@ class ExperimentResults(object):
 
     # TODO refactor and modularize for testing
     def _insights(self):
+        schema = Schema.for_experiment(self.id)
+        feature_names = schema.feature_names()
         out = {}
         ind = defaultdict(defaultdict)
         for variant in VARIANTS:
             mu = self.ex.by_variant[variant].mle_weights.get()
             dm = self.ex.by_variant[variant].discriminitive_mask.get()
-            for i, pair in enumerate(zip(mu, dm)):
-                ind[i][variant] = pair
+            for name, m, d in zip(feature_names, mu, dm):
+                ind[name][variant] = (m, d)
 
         def discriminitive_for_one(mu, feature, variant):
-            return f"{self._pp_sign(mu)} {feature} significantly correlates with success of {variant}"
+            return f"{self._pp_sign(mu)} '{feature}' significantly correlates with success of {variant}"
 
         for feature, comp in ind.items():
             a_mu, a_dm = comp[VARIANTS[0]]
             b_mu, b_dm = comp[VARIANTS[1]]
             if a_dm and b_dm: # Discriminitive for both variants
                 if np.sign(a_mu) == np.sign(b_mu): # Same correlation
-                    out[feature] = f"{self._pp_sign(a_mu)} {feature} significantly correlates with success for both variants."
+                    out[feature] = f"{self._pp_sign(a_mu)} '{feature}' significantly correlates with success for both variants."
                 else: # Opposite correlation
                     if a_dm > 0:
                         preference = "A over B"
                     else:
                         preference = "B over A"
-                    out[feature] = f"Positive {feature} significantly correlates with preference of {preference}"
+                    out[feature] = f"Positive '{feature}' significantly correlates with preference of {preference}"
             elif a_dm:
                 out[feature] = discriminitive_for_one(a_mu, feature, 'a')
             elif b_dm:
