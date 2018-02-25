@@ -1,4 +1,5 @@
 from flask import Flask
+from .config import config
 from honest_ab.login import LoginManager
 
 # Ensure the models are registered before the db mapping is generated
@@ -10,20 +11,13 @@ from honest_ab.controllers import register_controllers, register_orphans
 from honest_ab.database import db, sql_debugging
 from honest_ab.template_helpers import register_helpers
 
-def create_app(config=None, test_db=False, login_mock=None):
+def create_app(override_config=None, test_db=False, login_mock=None):
     app = Flask("honest_ab")
 
     # Config
-    app.config.update(dict(
-        DB_HOST='localhost',
-        DB_NAME='honest-ab_development',
-        DB_USER='honest-ab',
-        DB_PASSWORD='honest-ab',
-        LOGIN_MANAGER_SECRET_KEY='laksdjfubnounweflk' #FIXME
-    ))
     if test_db:
-        app.config.update(dict(DB_NAME='honest-ab_test'))
-    app.config.update(config or {})
+        config.update(dict(DB_NAME='honest-ab_test'))
+    config.update(override_config or {})
 
     # Routes
     register_orphans(app)
@@ -32,10 +26,11 @@ def create_app(config=None, test_db=False, login_mock=None):
     # Bind the database
     db.bind(
         provider='postgres',
-        user=app.config['DB_USER'],
-        password=app.config['DB_PASSWORD'],
-        host=app.config['DB_HOST'],
-        database=app.config['DB_NAME']
+        user='asxesmfsltrkph',
+        password='edee85ce286ca6c478d84883820fbf6be1cb3d26990bdb1105e4e482a32a9e8f',
+        host='ec2-174-129-33-29.compute-1.amazonaws.com',
+        database='d5st0l62rhi8ig',
+        port=5432
     )
     db.generate_mapping(create_tables=True)
 
@@ -43,7 +38,7 @@ def create_app(config=None, test_db=False, login_mock=None):
     register_helpers(app)
 
     # Initialize login manager
-    app.secret_key = app.config['LOGIN_MANAGER_SECRET_KEY']
+    app.secret_key = config['login_manager_secret_key']
     login_manager = LoginManager()
     login_manager.init_app(app)
     if login_mock != None:

@@ -18,6 +18,7 @@ hiredis = "*"
 numpy = "*"
 pyarrow = "*"
 scipy = "*"
+gunicorn = "*"
 
 
 [dev-packages]
