@@ -5,8 +5,5 @@ from honest_ab.database import db
 
 application = create_app()
 
-# if __name__ == '__main__':
-#     if PORT:
-#         application.run(port=int(PORT))
-#     else:
-#         application.run()
+if __name__ == '__main__':
+    application.run()
