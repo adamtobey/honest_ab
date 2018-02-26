@@ -15,7 +15,6 @@ class AuthenticationError(RuntimeError):
 
 class User(db.Entity, UserMixin):
 
-    # TODO string length validation
     name = Required(str, unique=True)
     pass_hash = Required(str)
 
@@ -103,11 +102,9 @@ class Experiment(db.Entity):
     # experiments in data storage
     uuid = PrimaryKey(uuid.UUID, default=uuid.uuid4)
 
-    # TODO string length validation
     name = Required(str)
     user = Required(User, index=True)
 
     created_at = Required(datetime, default=datetime.now())
 
-    # TODO length
     description = Optional(str)

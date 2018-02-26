@@ -26,11 +26,11 @@ def create_app(override_config=None, test_db=False, login_mock=None):
     # Bind the database
     db.bind(
         provider='postgres',
-        user='asxesmfsltrkph',
-        password='edee85ce286ca6c478d84883820fbf6be1cb3d26990bdb1105e4e482a32a9e8f',
-        host='ec2-174-129-33-29.compute-1.amazonaws.com',
-        database='d5st0l62rhi8ig',
-        port=5432
+        user=config.get('db_user'),
+        password=config.get('db_password'),
+        host=config.get('db_host'),
+        database=config.get('db_name'),
+        port=config.get('db_port')
     )
     db.generate_mapping(create_tables=True)
 

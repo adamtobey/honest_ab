@@ -44,7 +44,6 @@ class Schema(object):
 
     @staticmethod
     def for_experiment(experiment_uuid_hex):
-        # TODO Arrow serialization
         schema = json.loads(rd.get(rd_experiment_key(experiment_uuid_hex, 'schema')) or '{}')
         return Schema(experiment_uuid_hex, schema)
 
@@ -53,7 +52,7 @@ class Schema(object):
         self.schema = schema_dict
 
     def dimension(self):
-        return len(self.schema) # TODO
+        return len(self.schema)
 
     def save(self):
         rd.set(rd_experiment_key(self.eid, 'schema'), json.dumps(self.schema))

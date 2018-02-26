@@ -9,7 +9,6 @@ from .experiment_constants import *
 from .database import *
 from .schema import Schema
 
-# TODO test
 class ExperimentResults(object):
 
     @db_session
@@ -57,7 +56,6 @@ class ExperimentResults(object):
         else:
             return "Negative"
 
-    # TODO refactor and modularize for testing
     def _insights(self):
         schema = Schema.for_experiment(self.id)
         feature_names = schema.feature_names()

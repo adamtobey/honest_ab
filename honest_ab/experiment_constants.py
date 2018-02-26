@@ -1,6 +1,3 @@
-# TODO coupling and hard-coded values between this file and the
-# schema builder js
-
 VARIANT_KEY = 'variant'
 RESULT_KEY = 'result'
 

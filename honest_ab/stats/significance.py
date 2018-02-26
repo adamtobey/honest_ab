@@ -21,7 +21,6 @@ class SignificanceModel(object):
         self.ex.pr_b_gt_a.set(self._pr_b_gt_a(self.ex.outcome_counts.get()))
         self.ex.significance.set(max(self.ex.pr_b_gt_a.get(), 1 - self.ex.pr_b_gt_a.get()))
         if self.ex.significance.get() > self.CRITICAL_SIGNIFICANCE:
-            # TODO introduce priors for regression model
             self.ex.reached_significance.set(True)
 
     def _h(self, aA, bA, aB, bB, i):

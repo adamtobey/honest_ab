@@ -5,4 +5,4 @@ def requires_authentication(response):
     return on_login_form or redirecting_to_login
 
 def requires_app_key(response):
-    return response.status_code == 403 # TODO
+    return response.status_code == 403

@@ -10,9 +10,6 @@ from honest_ab.compute import pp
 from honest_ab.database import *
 from honest_ab.redis import rd
 
-# TODO tests will not catch methods not using @db_session when
-# they should, since this transaction will supercede the one they
-# should create. See if there is a fix for this.
 @pytest.fixture(autouse=True)
 def isolate_tests():
     pp.reset()

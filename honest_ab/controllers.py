@@ -60,7 +60,7 @@ def authenticate_api(fun):
                 # CRITICAL: Don't let people explore the app_key space!
                 return abort(404)
         else:
-            return abort(403) # TODO API-friendly json response
+            return abort(403)
 
     return handle_request
 
@@ -80,25 +80,21 @@ def docs():
 
 # Experiments controller
 
-# TODO this needs documentation
 @api_experiments_controller.route('/<experiment_uuid>/<variant>/<result>', methods=['POST'])
 @db_session
 @authenticate_api
 def post_experiment_result(experiment_uuid, variant, result, api_user):
-    # TODO to avoid leaking experiment UUID's that are in use,
-    # could select by uuid and user, but probably overkill.
     experiment = Experiment[experiment_uuid]
     if experiment == None:
-        return abort(404) # TODO API-friendly json response
+        return abort(404)
     elif experiment.user.get_pk() != api_user.get_pk():
         return abort_wrong_user()
     else:
-        # TODO if it doesn't exist?
         schema = Schema.for_experiment(experiment_uuid)
         try:
             input_point = schema.encode_input_point(request.form, variant, result)
         except SchemaViolationError as e:
-            return abort(400) # TODO include error message
+            return abort(400)
         try:
             write_data_point_json(experiment_uuid, json.dumps(input_point))
         except InvalidTestSpecError as e:
@@ -233,7 +229,6 @@ def create_user():
         flash(str(error), category='danger')
         return redirect(url_for('users.new_user'))
 
-# TODO nav
 @users_controller.route('/application_key')
 @login_required
 def user_application_key():

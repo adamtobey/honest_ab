@@ -1,13 +1,32 @@
 import os
+import re
 from flask.config import Config
 
-def _collect(schema):
-    collected = {}
-    for out_key, in_key in schema.items():
-        value = os.environ.get(in_key, False)
-        if value:
-            collected[out_key] = value
-    return collected
+def apply_redis(config):
+    redis_url = os.environ.get('REDIS_URL', False)
+    if redis_url:
+        p, u, pwd_host, port = redis_url.split(":")
+        pwd, host = pwd_host.split('@')
+        config.update(dict(
+            redis_host=host,
+            redis_port=int(port),
+            redis_pwd=pwd
+        ))
+
+def apply_db(config):
+    db_url = os.environ.get('DATABASE_URL', False)
+    if db_url:
+        p, ss_user, pwd_host, port_db = db_url.split(":")
+        pwd, host = pwd_host.split('@')
+        port, db = port_db.split("/")
+        user = ss_user[2:]
+        config.update(dict(
+            db_host=host,
+            db_port=int(port),
+            db_user=user,
+            db_password=pwd,
+            db_name=db
+        ))
 
 
 config = Config(root_path=os.path.abspath('.'))
@@ -16,6 +35,7 @@ config.update(dict(
 
     redis_host='localhost',
     redis_port=6379,
+    redis_pwd=None,
     redis_db=0,
 
     db_host='localhost',
@@ -31,14 +51,5 @@ config.update(dict(
     stats_base_dir=os.path.abspath(os.path.join('.', 'stats'))
 ))
 
-env = _collect(dict(
-    db_host='RDS_HOSTNAME',
-    db_port='RDS_PORT',
-    db_name='RDS_DB_NAME',
-    db_user='RDS_USERNAME',
-    db_password='RDS_PASSWORD',
-    login_manager_secret_key='LOGIN_KEY',
-    redis_host='REDIS_HOST',
-    redis_port='REDIS_PORT'
-))
-config.update(env)
+apply_redis(config)
+apply_db(config)

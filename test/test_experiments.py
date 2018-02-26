@@ -9,8 +9,6 @@ from honest_ab.schema import Schema
 
 class TestCreatingExperiments(object):
 
-    # TODO test schema creation
-
     def schema_to_form_fields(self, schema):
         form_encoded = {}
         for i, (name, tt) in enumerate(schema.items()):
@@ -37,8 +35,6 @@ class TestCreatingExperiments(object):
         eid = experiment.get_pk().hex
 
         assert schema == Schema.for_experiment(eid).as_dict()
-
-    # TODO test an invalid schema when schema validation is implemented
 
     def test_requires_authentication(self, client):
         response = client.post('experiments/create', follow_redirects=False, data=dict(

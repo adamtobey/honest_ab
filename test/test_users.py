@@ -35,10 +35,6 @@ class TestIds(object):
         lookup = User[user.get_id()]
         assert lookup == user
 
-# TODO test whether users are actually logged in with flask-login
-# Perhaps by subscribing to the login signal, mocking the module,
-# or reading the session in the app context
-
 class TestLoggedOut(object):
 
     def test_logging_out_works_with_user(self, client):

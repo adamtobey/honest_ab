@@ -99,7 +99,6 @@ class TestApiIngestion(object):
 
             assert response.status_code == 200
 
-            # TODO fragile test
             assert len(pp.submits) == 2
             assert pp.submits[0][0] == 'BatchStatisticsProcessor.process'
         finally:
