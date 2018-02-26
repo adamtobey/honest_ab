@@ -3,6 +3,7 @@ import pathlib
 import pyarrow as pa
 import numpy as np
 
+from .compute import ExperimentLock
 from .config import config
 from .schema import Schema
 from .experiment_constants import *
@@ -147,6 +148,7 @@ class SerializedExperimentState(SerializedState):
         super().__init__()
 
         self.path = os.path.join(config.get('stats_base_dir'), str(experiment_uuid_hex))
+        self.lock = ExperimentLock(experiment_uuid_hex)
 
         # Fields
         self.outcome_counts = self._serialized('outcome_counts.dat')
@@ -160,6 +162,14 @@ class SerializedExperimentState(SerializedState):
             self.significance,
             self.reached_significance
         ) = [FieldAccessor(self._state, i) for i in range(3)]
+
+    def __enter__(self):
+        self.lock.acquire()
+        super().__enter__()
+
+    def __exit__(self, *args):
+        super().__exit__()
+        self.lock.release()
 
 class AccessorMixin(object):
 

@@ -1,6 +1,21 @@
 from concurrent.futures import ThreadPoolExecutor, Future
+from threading import Lock
+from collections import defaultdict
 
 from .config import config
+
+class ExperimentLock(object):
+
+    _active_locks = defaultdict(Lock)
+
+    def __init__(self, experiment_id):
+        self.lock = ExperimentLock._active_locks[experiment_id]
+
+    def acquire(self):
+        return self.lock.acquire()
+
+    def release(self):
+        return self.lock.release()
 
 # Only mocking as needed
 class PoolMock(object):
