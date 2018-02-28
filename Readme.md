@@ -1,4 +1,4 @@
-Honest AB is an A/B testing service that uses interpretable machine learning models to provide both statistically significant testing as well as human-level insights. See it in action: https://honest-ab.herokuapp.com/.
+Honest AB is an A/B testing service that uses interpretable machine learning models to provide both statistically significant testing as well as human-level insights. See it in action: https://honest-ab.herokuapp.com/demo.
 
 # How does it work?
 
